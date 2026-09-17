@@ -52,7 +52,7 @@ async function fetchAttendanceLive(fichaCode, date) {
     });
   }
 
-  const url = new URL('/integrations/attendance', PULSE_API_URL);
+  const url = new URL('/api/v1/integrations/attendance', PULSE_API_URL);
   url.searchParams.set('ficha', fichaCode);
   url.searchParams.set('date', date);
 
