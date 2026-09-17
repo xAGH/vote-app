@@ -1,0 +1,15 @@
+node_modules/
+data/
+.env
+*.db
+*.db-shm
+*.db-wal
+.git/
+.gitignore
+.impeccable/
+.claude/
+*.md
+Rubrica para ADSO.xlsx
+Dockerfile
+docker-compose.yml
+.dockerignore
