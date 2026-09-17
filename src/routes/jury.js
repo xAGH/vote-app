@@ -242,4 +242,33 @@ router.post('/jurado/proyectos/:id/enviar', requireJudge, (req, res) => {
   res.redirect('/jurado/proyectos');
 });
 
+// Reabre una evaluación ya enviada para permitir corregirla mientras la
+// calificación siga abierta.
+router.post('/jurado/proyectos/:id/editar', requireJudge, (req, res) => {
+  const db = getDb();
+  const judgeId = req.session.judge.id;
+  const project = db.prepare('SELECT * FROM projects WHERE id = ? AND is_active = 1').get(req.params.id);
+
+  if (!project) {
+    return res.status(404).render('error', {
+      title: 'Proyecto no encontrado',
+      message: 'Ese proyecto no existe o ya no está activo.',
+      backHref: '/jurado/proyectos',
+    });
+  }
+  if (!res.locals.event.jury_voting_open) {
+    setFlash(req, 'warn', 'La calificación de jurados ya no está abierta, no puedes editarla.');
+    return res.redirect('/jurado/proyectos');
+  }
+
+  const evaluation = db
+    .prepare('SELECT * FROM jury_evaluations WHERE judge_id = ? AND project_id = ?')
+    .get(judgeId, project.id);
+  if (evaluation && evaluation.submitted_at) {
+    db.prepare('UPDATE jury_evaluations SET submitted_at = NULL WHERE id = ?').run(evaluation.id);
+    setFlash(req, 'done', `Evaluación de ${project.name} habilitada para edición.`);
+  }
+  res.redirect(`/jurado/proyectos/${project.id}`);
+});
+
 module.exports = router;

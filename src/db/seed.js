@@ -4,7 +4,7 @@ require('dotenv').config();
 const { init, getDb } = require('./index');
 const { hashPin } = require('../lib/auth');
 
-/** Siembra datos de demostración: 8 proyectos, 3 jurados, 2 fichas visitantes. */
+/** Siembra datos de demostración: 5 proyectos, 3 jurados, 2 fichas visitantes. */
 function seed() {
   init();
   const db = getDb();
@@ -22,9 +22,6 @@ function seed() {
     { stand: 3, name: 'SaludCerca', ficha: '2612346', program: 'ADSO', team: 'Laura Castillo\nAndrés Vargas\nJulián Rojas', summary: 'Sistema de turnos y recordatorios para centros de salud rurales.' },
     { stand: 4, name: 'EcoRuta Escolar', ficha: '2612346', program: 'ADSO', team: 'Natalia Suárez\nFelipe Herrera', summary: 'Optimización de rutas de transporte escolar con menor huella de carbono.' },
     { stand: 5, name: 'InventarioYa', ficha: '2612347', program: 'ADSO', team: 'Sebastián Peña\nCamila Duarte\nMateo Salazar', summary: 'Control de inventario para tenderos con lectura de código de barras.' },
-    { stand: 6, name: 'ManosQueEnseñan', ficha: '2612347', program: 'ADSO', team: 'Isabella Cárdenas\nSantiago Molina', summary: 'Plataforma de tutorías entre pares para aprendices SENA.' },
-    { stand: 7, name: 'ReciclApp', ficha: '2612348', program: 'ADSO', team: 'Valeria Jiménez\nTomás Restrepo\nEmma Padilla', summary: 'Gamificación del reciclaje en instituciones educativas.' },
-    { stand: 8, name: 'TurnoJusto', ficha: '2612348', program: 'ADSO', team: 'Juan Pablo Gil\nMariana Cortés', summary: 'Fila virtual y priorización justa de atención en trámites públicos.' },
   ];
 
   const insertProject = db.prepare(

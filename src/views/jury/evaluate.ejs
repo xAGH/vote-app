@@ -95,9 +95,22 @@
         Enviar evaluación
         <svg class="icon"><use href="#icon-check"/></svg>
       </button>
-      <p class="field__hint" style="text-align:center; margin-top:10px;">No podrás editarla después de enviarla.</p>
-    <% } else { %>
+      <p class="field__hint" style="text-align:center; margin-top:10px;">Podrás editarla después de enviarla mientras la calificación siga abierta.</p>
+    <% } else if (!isSubmitted) { %>
       <a class="btn btn--ghost btn--block" href="/jurado/proyectos">Volver a mis proyectos</a>
     <% } %>
   </form>
+
+  <% if (isSubmitted && votingOpen) { %>
+    <form method="post" action="/jurado/proyectos/<%= project.id %>/editar" style="margin-top:10px;">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="btn btn--ink btn--block" type="submit">
+        Editar evaluación
+        <svg class="icon"><use href="#icon-pencil"/></svg>
+      </button>
+    </form>
+    <a class="btn btn--ghost btn--block" style="margin-top:10px;" href="/jurado/proyectos">Volver a mis proyectos</a>
+  <% } else if (isSubmitted) { %>
+    <a class="btn btn--ghost btn--block" style="margin-top:10px;" href="/jurado/proyectos">Volver a mis proyectos</a>
+  <% } %>
 <% } %>
