@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-16T00:00:00Z",
+  "title": "Design System: ShowRoom Vote",
+  "extensions": {
+    "colorMeta": {
+      "paper": { "role": "neutral", "displayName": "Floor", "canonical": "#f3f4f1", "tonalRamp": ["#15181c", "#232629", "#33373c", "#4c525a", "#7a8188", "#c6cac2", "#eceeea", "#f3f4f1"] },
+      "paper-raised": { "role": "neutral", "displayName": "Raised Paper", "canonical": "#ffffff", "tonalRamp": ["#15181c", "#33373c", "#4c525a", "#7a8188", "#c6cac2", "#dde0da", "#eceeea", "#ffffff"] },
+      "ink": { "role": "neutral", "displayName": "Near-Black Ink", "canonical": "#15181c", "tonalRamp": ["#0a0c0e", "#15181c", "#232629", "#33373c", "#4c525a", "#7a8188", "#a9adb1", "#c6cac2"] },
+      "accent": { "role": "primary", "displayName": "Signal Amber", "canonical": "#d9540c", "tonalRamp": ["#4a1c05", "#7a2f08", "#a83e0a", "#c14a09", "#d9540c", "#ea7a3d", "#f0c9a4", "#fbe3d1"] },
+      "stamp": { "role": "secondary", "displayName": "Stamp Green", "canonical": "#1f6e4a", "tonalRamp": ["#0a1f15", "#12321f", "#1f6e4a", "#2d8a5f", "#4bbf8a", "#7fd1ab", "#b7dac4", "#dcefe3"] },
+      "warn": { "role": "tertiary", "displayName": "Document Warn", "canonical": "#a83a1f", "tonalRamp": ["#2f0f07", "#5a1d10", "#a83a1f", "#c94f2f", "#e58a68", "#eeab90", "#e7b49a", "#f6ddd2"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Big Shoulders Display/Title", "purpose": "Page titles, credential titles, stand numerals, score value. Never running text." },
+      "body": { "displayName": "IBM Plex Sans Body", "purpose": "All paragraphs, form fields, labels, button text." }
+    },
+    "shadows": [
+      { "name": "shadow-pop", "value": "0 1px 1px rgba(21,24,28,.05), 0 2px 6px rgba(21,24,28,.08)", "purpose": "Primary buttons, credential clip." },
+      { "name": "shadow-card", "value": "0 1px 2px rgba(21,24,28,.04), 0 8px 20px -12px rgba(21,24,28,.18)", "purpose": "Resting containers: cards, credential, table-wrap, door." },
+      { "name": "shadow-raised", "value": "0 2px 4px rgba(21,24,28,.06), 0 16px 32px -16px rgba(21,24,28,.28)", "purpose": "The single sticky score-badge, the only floating element." }
+    ],
+    "motion": [
+      { "name": "ease-settle", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Default easing for hover, focus, and stamp-land transitions." },
+      { "name": "stamp-land", "value": "scale(1.6) rotate(-11deg) opacity:0 -> scale(0.94) rotate(-0.5deg) -> scale(1) rotate(-2deg), 0.42s", "purpose": "Entrance animation for a freshly-applied ink-stamp chip; disabled under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "door-grid-two-col", "value": "640px" },
+      { "name": "topbar-shed-meta", "value": "560px" },
+      { "name": "topbar-shed-brand", "value": "420px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Signal Amber call-to-action button, used for the single primary action per screen (submit vote, submit evaluation).",
+      "html": "<button class=\"ds-btn-primary\">Enviar evaluación</button>",
+      "css": ".ds-btn-primary { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:'IBM Plex Sans', system-ui, sans-serif; font-weight:600; font-size:0.95rem; padding:13px 22px; border-radius:6px; border:1px solid transparent; background:#d9540c; color:#fff7f0; box-shadow:0 1px 1px rgba(21,24,28,.05), 0 2px 6px rgba(21,24,28,.08); cursor:pointer; transition:transform .12s cubic-bezier(.16,1,.3,1), background-color .15s cubic-bezier(.16,1,.3,1); } .ds-btn-primary:hover { background:#c14a09; } .ds-btn-primary:focus-visible { outline:2.5px solid #d9540c; outline-offset:2px; } .ds-btn-primary:active { transform:translateY(1px) scale(.99); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action, transparent with a neutral border.",
+      "html": "<button class=\"ds-btn-ghost\">Volver a mis proyectos</button>",
+      "css": ".ds-btn-ghost { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:'IBM Plex Sans', system-ui, sans-serif; font-weight:600; font-size:0.95rem; padding:13px 22px; border-radius:6px; border:1px solid #c6cac2; background:transparent; color:#15181c; cursor:pointer; transition:border-color .15s, background-color .15s; } .ds-btn-ghost:hover { border-color:#4c525a; background:#eceeea; } .ds-btn-ghost:focus-visible { outline:2.5px solid #d9540c; outline-offset:2px; }"
+    },
+    {
+      "name": "Stand Badge",
+      "kind": "custom",
+      "refersTo": "stand-badge",
+      "description": "Large numeral badge identifying a stand, in Big Shoulders on an ink or accent tile.",
+      "html": "<span class=\"ds-stand-badge\"><span class=\"ds-stand-badge__prefix\">Stand</span>07</span>",
+      "css": ".ds-stand-badge { display:inline-grid; place-items:center; width:64px; height:64px; font-family:'Big Shoulders','Arial Narrow',sans-serif; font-weight:700; font-size:1.6rem; line-height:1; background:#d9540c; color:#fff7f0; border-radius:10px; } .ds-stand-badge__prefix { display:block; font-family:'IBM Plex Sans',sans-serif; font-weight:600; font-size:0.55em; letter-spacing:.08em; text-transform:uppercase; opacity:.72; }"
+    },
+    {
+      "name": "Stamp Chip (Done)",
+      "kind": "chip",
+      "refersTo": "chip-done",
+      "description": "Resolved-state verdict drawn as a real ink stamp: double ring, rotation, uppercase label. Never a colored pill.",
+      "html": "<span class=\"ds-chip-done\"><svg class=\"ds-chip-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"/></svg>Votado</span>",
+      "css": ".ds-chip-done { display:inline-flex; align-items:center; gap:6px; padding:6px 13px; border-radius:3px; font-size:0.72rem; font-weight:700; letter-spacing:.03em; text-transform:uppercase; background:#dcefe3; color:#1f6e4a; border:1.5px solid #1f6e4a; outline:1px solid #1f6e4a; outline-offset:-4px; transform:rotate(-2deg); } .ds-chip-icon { width:0.95em; height:0.95em; }"
+    },
+    {
+      "name": "Pending Chip",
+      "kind": "chip",
+      "refersTo": "chip-pending",
+      "description": "Unresolved-state verdict: the empty box waiting for its stamp.",
+      "html": "<span class=\"ds-chip-pending\"><svg class=\"ds-chip-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"8\"/></svg>Pendiente</span>",
+      "css": ".ds-chip-pending { display:inline-flex; align-items:center; gap:6px; padding:6px 13px; border-radius:3px; font-size:0.72rem; font-weight:700; letter-spacing:.03em; text-transform:uppercase; background:transparent; color:#7a8188; border:1.5px dashed #c6cac2; } .ds-chip-icon { width:0.95em; height:0.95em; }"
+    },
+    {
+      "name": "Credential",
+      "kind": "custom",
+      "refersTo": "credential",
+      "description": "Identity device used on all three entry screens (apprentice, jury, admin): a raised card with a physical clip and lanyard eyelet overlapping its top edge.",
+      "html": "<div class=\"ds-credential\"><span class=\"ds-credential__clip\"></span><h1 class=\"ds-credential__title\">Presenta tu credencial</h1><p class=\"ds-credential__lede\">Verificamos tu asistencia de hoy contra el registro oficial.</p></div>",
+      "css": ".ds-credential { position:relative; background:#ffffff; border:1px solid #dde0da; border-radius:16px; box-shadow:0 1px 2px rgba(21,24,28,.04), 0 8px 20px -12px rgba(21,24,28,.18); padding:32px; max-width:460px; } .ds-credential__clip { position:absolute; top:-15px; left:50%; transform:translateX(-50%); width:68px; height:24px; background:#15181c; border-radius:7px 7px 3px 3px; box-shadow:0 1px 1px rgba(21,24,28,.05), 0 2px 6px rgba(21,24,28,.08); } .ds-credential__clip::after { content:''; position:absolute; top:7px; left:50%; transform:translateX(-50%); width:13px; height:13px; border-radius:50%; background:#f3f4f1; border:2px solid #ffffff; } .ds-credential__title { font-family:'Big Shoulders','Arial Narrow',sans-serif; font-size:1.85rem; font-weight:700; margin-bottom:8px; } .ds-credential__lede { color:#4c525a; font-size:0.98rem; max-width:46ch; }"
+    },
+    {
+      "name": "Stand Card",
+      "kind": "card",
+      "refersTo": "stand-card",
+      "description": "Directory tile linking to a project: badge, name, meta, and a stamp chip for its vote state.",
+      "html": "<a class=\"ds-stand-card\" href=\"#\"><div class=\"ds-stand-card__top\"><span class=\"ds-stand-badge-sm\">07</span><span class=\"ds-chip-done\">Votado</span></div><p class=\"ds-stand-card__name\">EcoRastreo</p><p class=\"ds-stand-card__meta\">ADSO · Ficha 2758761</p></a>",
+      "css": ".ds-stand-card { display:block; background:#ffffff; border:1px solid #dde0da; border-radius:16px; padding:18px; box-shadow:0 1px 2px rgba(21,24,28,.04), 0 8px 20px -12px rgba(21,24,28,.18); text-decoration:none; color:inherit; transition:border-color .15s, transform .15s; } .ds-stand-card:hover { border-color:#c6cac2; transform:translateY(-2px); } .ds-stand-card__top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; } .ds-stand-card__name { font-size:1.1rem; font-weight:700; margin-bottom:3px; } .ds-stand-card__meta { font-size:0.82rem; color:#7a8188; } .ds-stand-badge-sm { display:inline-grid; place-items:center; width:40px; height:40px; font-family:'Big Shoulders',sans-serif; font-weight:700; font-size:1.05rem; background:#d9540c; color:#fff7f0; border-radius:8px; }"
+    },
+    {
+      "name": "Rubric Scale Row",
+      "kind": "input",
+      "refersTo": "rubric-block",
+      "description": "1-5 scoring control for a jury rubric criterion: outlined buttons that fill solid ink when selected.",
+      "html": "<div class=\"ds-scale-row\" role=\"radiogroup\"><input type=\"radio\" id=\"c1\" name=\"c\" checked><label for=\"c1\">1</label><input type=\"radio\" id=\"c2\" name=\"c\"><label for=\"c2\">2</label><input type=\"radio\" id=\"c3\" name=\"c\"><label for=\"c3\">3</label></div>",
+      "css": ".ds-scale-row { display:flex; gap:6px; } .ds-scale-row input { position:absolute; opacity:0; width:1px; height:1px; } .ds-scale-row label { flex:1; display:grid; place-items:center; height:40px; border-radius:6px; border:1.5px solid #c6cac2; font-weight:600; font-family:'Big Shoulders',sans-serif; color:#4c525a; cursor:pointer; } .ds-scale-row input:checked + label { background:#15181c; border-color:#15181c; color:#ffffff; } .ds-scale-row input:focus-visible + label { outline:2.5px solid #d9540c; outline-offset:2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Piso de Feria",
+    "overview": "ShowRoom Vote renders every screen as a physical fixture of a real trade-show floor rather than as a survey form or an admin dashboard. Visiting a stand's ballot reads like scanning a numbered directory tile; casting a vote reads like presenting a credential at an accreditation desk; the jury's screen reads like an official evaluation station with a paper rubric, visible progress across stations, and a running score. The palette stays restrained -- cool, very light neutrals plus a single signal accent -- so that number badges, credential clips, and ink stamps read as the deliberate exceptions instead of competing decoration. Big Shoulders (condensed, vinyl-lettering register) is reserved for numerals and titles; IBM Plex Sans carries every sentence a visitor or jury member actually reads. The system was confirmed \"ship\" after a finish-review pass that removed a generic eyebrow/kicker pattern site-wide, rebuilt status chips as real ink stamps, added a badge-clip/lanyard device to all three entry screens, and put real stand data into the desktop cover's floor directory -- those four fixes are now load-bearing parts of the system, not one-off polish.",
+    "keyCharacteristics": [
+      "Cool, very light grey floor (never cream/parchment) with near-black ink and a single amber signage accent.",
+      "Big Shoulders for numerals/titles, IBM Plex Sans for everything read at length.",
+      "Status is drawn as a real ink stamp (double ring, rotation) or an empty dashed box awaiting one -- never a generic colored pill.",
+      "A credential (with a physical clip + lanyard eyelet) is the identity device on every entry screen, not a login card.",
+      "Full light/dark parity via prefers-color-scheme, same token names, inverted values."
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Signal Amber is the only color used for calls to action and primary emphasis; it never appears as a large background fill, only as text/icon color, thin fills on soft variants, or small solid badges.", "section": "colors" },
+      { "name": "The Status-Is-Ink Rule", "body": "A verdict (voted/submitted/approved, error/absent) is always drawn as a stamp or its dashed empty counterpart, in stamp-green or warn-red -- never in the accent color and never as a generic pill.", "section": "colors" },
+      { "name": "The Digits-Get-Display Rule", "body": "Big Shoulders is reserved for headings and numerals that read as signage (stand numbers, score value, table titles). Body text, buttons, and form fields stay in IBM Plex Sans even when bold.", "section": "typography" },
+      { "name": "The Same Tokens, Different Budget Rule", "body": "Apprentice (mobile, one-tap voting), jury (tablet, dense multi-block rubric with autosave) and admin (desktop tables) never fork the token set -- they only change container width, density, and which components appear.", "section": "layout" },
+      { "name": "The One Floating Element Rule", "body": "Only the jury's sticky score-badge uses shadow-raised; every other surface stays at card-level or lower so nothing else competes with it for depth.", "section": "elevation" },
+      { "name": "The Chip-Is-Not-a-Pill Rule", "body": "Status geometry never uses a fully rounded pill. Resolved states are 3px-radius ink stamps with a double ring and a slight rotation; unresolved states are the same rectangle, dashed and unfilled, waiting for its stamp.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do keep Signal Amber (#d9540c) to primary actions, badges, and focus states; it is legible against the floor at every viewport and its rarity is what makes it read as \"signal.\"",
+      "Do draw every pass/fail or submitted/pending verdict as a stamp (3px radius, double ring, rotation) or its dashed empty counterpart, per the Status-Is-Ring rule.",
+      "Do use Big Shoulders only for numerals and headings that function as signage; keep body copy, buttons, and form controls in IBM Plex Sans.",
+      "Do give any new identity/entry surface the credential-and-clip treatment instead of a bare login card, matching the three existing entry screens.",
+      "Do reuse the same token set across apprentice/jury/admin and differentiate only by container width and density, never by forking colors or type."
+    ],
+    "donts": [
+      "Don't introduce a kicker/eyebrow label above headings. The build shipped and then removed this pattern site-wide during finish-review; it is a defect the codebase no longer carries and must not be reintroduced.",
+      "Don't render a status as a generic rounded pill (border-radius: 999px colored badge). The system's status vocabulary is exclusively the ink-stamp/dashed-box pair.",
+      "Don't use crema/parchment or warm neutrals for the page floor; the floor is cool grey (#f3f4f1 light / #17191c dark) by explicit direction.",
+      "Don't apply shadow-raised to more than one element per screen; it is reserved for the single floating score-badge so elevation stays legible as hierarchy, not decoration."
+    ]
+  }
+}
