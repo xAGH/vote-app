@@ -1,0 +1,68 @@
+<%- include('../partials/admin-nav') %>
+
+<div class="section-toolbar">
+  <div class="page-head" style="margin-bottom:0;">
+    <h1 class="page-head__title">Acta de resultados</h1>
+  </div>
+  <a class="btn btn--ink" href="/admin/resultados.csv"><svg class="icon"><use href="#icon-download"/></svg>Descargar CSV</a>
+</div>
+
+<h2 style="font-size:1.05rem; font-weight:700; margin-bottom:4px;">Voto de aprendices</h2>
+<p class="field__hint" style="margin-bottom:14px;">Determina el premio del público. Desempate por cantidad de votos.</p>
+
+<div class="table-wrap" style="margin-bottom:32px;">
+  <table>
+    <thead>
+      <tr><th></th><th>Stand</th><th>Proyecto</th><th>Promedio</th><th>Votos</th><th>Desglose</th></tr>
+    </thead>
+    <tbody>
+      <% apprentice.forEach(function (r, i) { %>
+        <tr>
+          <td><span class="rank-num rank-num--<%= i + 1 %>"><%= i === 0 && r.voteCount > 0 ? '' : (i + 1) %><% if (i === 0 && r.voteCount > 0) { %><svg class="icon"><use href="#icon-trophy"/></svg><% } %></span></td>
+          <td><span class="stand-badge stand-badge--sm"><%= r.project.stand_number %></span></td>
+          <td><strong><%= r.project.name %></strong><br><span class="field__hint"><%= r.project.ficha_code %></span></td>
+          <td><span style="font-family:var(--font-display); font-weight:700; font-size:1.1rem;"><%= r.average != null ? r.average.toFixed(1) : '—' %></span></td>
+          <td><%= r.voteCount %></td>
+          <td style="font-size:0.8rem; color:var(--ink-faint);">
+            <% if (r.breakdown) { %>
+              Stand <%= r.breakdown.stand %> · Claridad <%= r.breakdown.clarity %> · Innovación <%= r.breakdown.innovation %> · Dominio <%= r.breakdown.mastery %>
+            <% } else { %>—<% } %>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!apprentice.length) { %>
+        <tr><td colspan="6" class="empty-state">Todavía no hay proyectos.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<h2 style="font-size:1.05rem; font-weight:700; margin-bottom:4px;">Nota de jurados</h2>
+<p class="field__hint" style="margin-bottom:14px;">Nota oficial del proyecto formativo. La decisión de aprobación de etapa lectiva la toman los jurados fuera de esta app.</p>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Stand</th><th>Proyecto</th><th>Nota final</th><th>Nivel</th><th>Jurados</th><th>Por jurado</th></tr>
+    </thead>
+    <tbody>
+      <% jury.forEach(function (r) { %>
+        <tr>
+          <td><span class="stand-badge stand-badge--sm"><%= r.project.stand_number %></span></td>
+          <td><strong><%= r.project.name %></strong></td>
+          <td><span style="font-family:var(--font-display); font-weight:700; font-size:1.1rem;"><%= r.finalAverage != null ? r.finalAverage.toFixed(1) : '—' %></span></td>
+          <td><% if (r.level) { %><span class="chip chip--accent"><%= r.level %></span><% } else { %>—<% } %></td>
+          <td><%= r.judgesSubmitted %>/<%= r.judgesTotal %></td>
+          <td style="font-size:0.8rem; color:var(--ink-faint);">
+            <% if (r.judgeAverages.length) { %>
+              <% r.judgeAverages.forEach(function (j, idx) { %><%= idx > 0 ? ' · ' : '' %><%= j.judgeName %>: <%= j.average != null ? j.average.toFixed(1) : '—' %><% }) %>
+            <% } else { %>Sin evaluaciones enviadas<% } %>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!jury.length) { %>
+        <tr><td colspan="6" class="empty-state">Todavía no hay proyectos.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>

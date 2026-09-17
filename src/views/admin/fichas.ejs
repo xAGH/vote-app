@@ -1,0 +1,68 @@
+<%- include('../partials/admin-nav') %>
+
+<div class="section-toolbar">
+  <div class="page-head" style="margin-bottom:0;">
+    <h1 class="page-head__title">Fichas visitantes</h1>
+    <p class="page-head__desc">Solo los aprendices de estas fichas pueden votar, verificados contra la asistencia registrada en Pulse. Sincroniza antes de abrir la votación.</p>
+  </div>
+  <form method="post" action="/admin/fichas/sincronizar-todas">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <button class="btn btn--ink" type="submit"><svg class="icon"><use href="#icon-refresh"/></svg>Sincronizar todas</button>
+  </form>
+</div>
+
+<div class="table-wrap" style="padding:22px; margin-bottom:24px;">
+  <h2 style="font-size:0.95rem; font-weight:700; margin-bottom:14px;">Agregar ficha</h2>
+  <form method="post" action="/admin/fichas" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="field" style="margin-bottom:0; flex:1; min-width:160px;">
+      <label class="field__label" for="ficha_code">Código de ficha</label>
+      <input class="input" id="ficha_code" name="ficha_code" placeholder="2612345" required>
+    </div>
+    <div class="field" style="margin-bottom:0; flex:2; min-width:220px;">
+      <label class="field__label" for="label">Etiqueta</label>
+      <input class="input" id="label" name="label" placeholder="2612345 · ADSI">
+    </div>
+    <button class="btn btn--primary" type="submit"><svg class="icon"><use href="#icon-plus"/></svg>Agregar</button>
+  </form>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Ficha</th><th>Estado de sincronización</th><th>Roster</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% syncByFicha.forEach(function (row) { %>
+        <tr style="opacity:<%= row.ficha.is_active ? '1' : '0.5' %>;">
+          <td><strong><%= row.ficha.label %></strong></td>
+          <td>
+            <% if (!row.sync) { %>
+              <span class="chip chip--pending"><svg class="icon"><use href="#icon-circle"/></svg>Sin sincronizar</span>
+            <% } else if (row.sync.error) { %>
+              <span class="chip chip--warn" title="<%= row.sync.error %>"><svg class="icon"><use href="#icon-alert"/></svg>Error</span>
+            <% } else if (!row.sync.has_sessions) { %>
+              <span class="chip chip--warn"><svg class="icon"><use href="#icon-alert"/></svg>Sin sesión hoy</span>
+            <% } else { %>
+              <span class="chip chip--done"><svg class="icon"><use href="#icon-check"/></svg>Sincronizada</span>
+            <% } %>
+          </td>
+          <td><%= row.sync ? row.sync.roster_count : '—' %></td>
+          <td style="text-align:right; white-space:nowrap;">
+            <form method="post" action="/admin/fichas/<%= row.ficha.id %>/sincronizar" style="display:inline;">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="btn btn--ghost btn--sm" type="submit"><svg class="icon"><use href="#icon-refresh"/></svg></button>
+            </form>
+            <form method="post" action="/admin/fichas/<%= row.ficha.id %>/eliminar" style="display:inline;">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="btn btn--ghost btn--sm" type="submit"><svg class="icon"><use href="#icon-trash"/></svg></button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!syncByFicha.length) { %>
+        <tr><td colspan="4" class="empty-state">Todavía no hay fichas visitantes.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,103 @@
+<%
+  const isSubmitted = !!evaluation.submitted_at;
+  const isEditable = votingOpen && !isSubmitted;
+  const answeredCount = Object.keys(scores).length;
+  const currentAvg = answeredCount ? (Object.values(scores).reduce((a, b) => a + b, 0) / answeredCount) : null;
+%>
+<a class="back-link" href="/jurado/proyectos"><svg class="icon"><use href="#icon-chevron-left"/></svg> Volver a mis proyectos</a>
+
+<div class="page-head" style="margin-bottom:14px;">
+  <div class="stand-card__top" style="margin-bottom:10px;">
+    <span class="stand-badge stand-badge--lg stand-badge--accent">
+      <span class="stand-badge__prefix">Stand</span>
+      <%= project.stand_number %>
+    </span>
+    <% if (isSubmitted) { %>
+      <span class="chip chip--done"><svg class="icon"><use href="#icon-check"/></svg>Enviada</span>
+    <% } %>
+  </div>
+  <h1 class="page-head__title"><%= project.name %></h1>
+  <p class="page-head__desc"><%= project.program_name || 'Proyecto formativo' %> · Ficha <%= project.ficha_code %></p>
+</div>
+
+<% if (typeof formError !== 'undefined' && formError) { %>
+  <div class="alert alert--warn" role="alert">
+    <svg class="icon"><use href="#icon-alert"/></svg>
+    <span><%= formError %></span>
+  </div>
+<% } %>
+
+<% if (!votingOpen && !isSubmitted) { %>
+  <div class="alert alert--warn">
+    <svg class="icon"><use href="#icon-alert"/></svg>
+    <span>La calificación de jurados está cerrada. No puedes iniciar esta evaluación.</span>
+  </div>
+<% } else { %>
+
+  <form method="post" action="/jurado/proyectos/<%= project.id %>/enviar"
+        <% if (isEditable) { %>data-jury-form data-csrf="<%= csrfToken %>" data-save-url="/jurado/proyectos/<%= project.id %>/criterio"<% } %>>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+    <div class="score-badge">
+      <div>
+        <div class="score-badge__label">Promedio corriente</div>
+        <div class="score-badge__value" data-score-value><%= currentAvg != null ? currentAvg.toFixed(1) : '—' %></div>
+      </div>
+      <% if (isEditable) { %>
+        <div class="score-badge__save" data-save-status>Autoguardado activo</div>
+      <% } else { %>
+        <div class="score-badge__save">Evaluación enviada</div>
+      <% } %>
+    </div>
+
+    <div class="station-rail">
+      <% rubric.forEach(function (block) {
+        const keys = block.criteria.map(c => c.key);
+        const answered = keys.filter(k => scores[k] != null).length;
+        const state = answered === 0 ? 'empty' : (answered === keys.length ? 'complete' : 'partial');
+      %>
+        <div class="station-rail__item" data-rail-for="<%= block.key %>" data-state="<%= state %>" title="<%= block.label %>"></div>
+      <% }) %>
+    </div>
+
+    <% rubric.forEach(function (block, blockIndex) { %>
+      <fieldset class="rubric-block" data-rubric-block="<%= block.key %>" <%= !isEditable ? 'disabled' : '' %>>
+        <div class="rubric-block__header">
+          <span class="rubric-block__index"><%= blockIndex + 1 %></span>
+          <h2 class="rubric-block__title"><%= block.label %></h2>
+        </div>
+        <% block.criteria.forEach(function (criterion) { %>
+          <div class="rubric-criterion">
+            <p class="rubric-criterion__label">
+              <%= criterion.label %>
+              <% if (criterion.added) { %><span class="tag-new">Nuevo</span><% } %>
+            </p>
+            <div class="scale-row" role="radiogroup" aria-label="<%= criterion.label %>">
+              <% for (let i = 1; i <= 5; i++) { %>
+                <input type="radio" id="<%= criterion.key %>_<%= i %>" name="<%= criterion.key %>" value="<%= i %>"
+                       <%= scores[criterion.key] === i ? 'checked' : '' %>>
+                <label for="<%= criterion.key %>_<%= i %>"><%= i %></label>
+              <% } %>
+            </div>
+          </div>
+        <% }) %>
+      </fieldset>
+    <% }) %>
+
+    <div class="field">
+      <label class="field__label" for="observations">Observaciones (opcional)</label>
+      <textarea class="textarea" id="observations" name="observations" <%= !isEditable ? 'disabled' : '' %>
+                placeholder="Aspectos a resaltar o recomendaciones para el equipo…"><%= evaluation.observations || '' %></textarea>
+    </div>
+
+    <% if (isEditable) { %>
+      <button class="btn btn--primary btn--block" type="submit">
+        Enviar evaluación
+        <svg class="icon"><use href="#icon-check"/></svg>
+      </button>
+      <p class="field__hint" style="text-align:center; margin-top:10px;">No podrás editarla después de enviarla.</p>
+    <% } else { %>
+      <a class="btn btn--ghost btn--block" href="/jurado/proyectos">Volver a mis proyectos</a>
+    <% } %>
+  </form>
+<% } %>

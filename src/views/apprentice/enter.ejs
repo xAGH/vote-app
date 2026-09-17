@@ -1,0 +1,45 @@
+<div class="credential" style="max-width:460px; margin:0 auto;">
+  <span class="credential__clip" aria-hidden="true"></span>
+  <h1 class="credential__title">Presenta tu credencial</h1>
+  <p class="credential__lede">Verificamos tu asistencia de hoy contra el registro oficial. Solo puedes votar si estuviste presente en tu ficha.</p>
+
+  <% if (formError) { %>
+    <div class="alert alert--warn" role="alert">
+      <svg class="icon"><use href="#icon-alert"/></svg>
+      <span><%= formError %></span>
+    </div>
+  <% } %>
+
+  <% if (!fichas.length) { %>
+    <div class="alert alert--info">
+      <svg class="icon"><use href="#icon-alert"/></svg>
+      <span>Aún no hay fichas visitantes configuradas para este evento. Consulta con el organizador.</span>
+    </div>
+  <% } %>
+
+  <form method="post" action="/aprendiz/ingresar" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+    <div class="field">
+      <label class="field__label" for="ficha_code">Tu ficha</label>
+      <select class="select" id="ficha_code" name="ficha_code" required>
+        <option value="" disabled <%= !formValues.ficha_code ? 'selected' : '' %>>Selecciona tu ficha…</option>
+        <% fichas.forEach(function (f) { %>
+          <option value="<%= f.ficha_code %>" <%= formValues.ficha_code === f.ficha_code ? 'selected' : '' %>><%= f.label %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="doc_number">Número de documento</label>
+      <input class="input" type="text" inputmode="numeric" pattern="[0-9]*" id="doc_number" name="doc_number"
+             placeholder="Ej. 1098765432" value="<%= formValues.doc_number %>" required>
+      <span class="field__hint">El mismo con el que registraste tu asistencia hoy.</span>
+    </div>
+
+    <button class="btn btn--primary btn--block" type="submit">
+      Ingresar y ver el directorio
+      <svg class="icon"><use href="#icon-arrow-right"/></svg>
+    </button>
+  </form>
+</div>

@@ -1,0 +1,78 @@
+<a class="back-link" href="/proyectos"><svg class="icon"><use href="#icon-chevron-left"/></svg> Volver al directorio</a>
+
+<div class="credential">
+  <div class="stand-card__top" style="margin-bottom:18px;">
+    <span class="stand-badge stand-badge--lg stand-badge--accent">
+      <span class="stand-badge__prefix">Stand</span>
+      <%= project.stand_number %>
+    </span>
+    <% if (existingVote) { %>
+      <span class="chip chip--done"><svg class="icon"><use href="#icon-check"/></svg>Ya votaste</span>
+    <% } %>
+  </div>
+
+  <h1 class="credential__title"><%= project.name %></h1>
+  <p class="stand-card__meta" style="margin-bottom:14px;"><%= project.program_name || 'Proyecto formativo' %> · Ficha <%= project.ficha_code %></p>
+  <% if (project.summary) { %><p class="credential__lede"><%= project.summary %></p><% } %>
+  <% if (project.team_members) { %>
+    <p class="field__hint" style="margin-bottom:26px;">Equipo: <%= project.team_members.split('\n').join(', ') %></p>
+  <% } %>
+
+  <% if (typeof formError !== 'undefined' && formError) { %>
+    <div class="alert alert--warn" role="alert">
+      <svg class="icon"><use href="#icon-alert"/></svg>
+      <span><%= formError %></span>
+    </div>
+  <% } %>
+
+  <% if (existingVote) { %>
+    <div class="alert alert--done">
+      <svg class="icon"><use href="#icon-check"/></svg>
+      <span>Ya calificaste este stand. Solo se permite un voto por proyecto.</span>
+    </div>
+    <% rubric.forEach(function (criterion) { %>
+      <fieldset class="star-field" disabled>
+        <legend class="star-field__legend"><%= criterion.label %></legend>
+        <div class="star-rating" aria-hidden="true">
+          <% for (let i = 5; i >= 1; i--) { %>
+            <svg class="icon" style="width:30px;height:30px;color:<%= i <= existingVote[criterion.key] ? 'var(--accent)' : 'var(--line-strong)' %>;">
+              <use href="#icon-star"/>
+            </svg>
+          <% } %>
+        </div>
+      </fieldset>
+    <% }) %>
+    <a class="btn btn--ghost btn--block" href="/proyectos">Volver al directorio</a>
+  <% } else if (!votingOpen) { %>
+    <div class="alert alert--warn">
+      <svg class="icon"><use href="#icon-alert"/></svg>
+      <span>La votación está cerrada por ahora.</span>
+    </div>
+    <a class="btn btn--ghost btn--block" href="/proyectos">Volver al directorio</a>
+  <% } else { %>
+    <form method="post" action="/proyectos/<%= project.id %>/voto">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <% rubric.forEach(function (criterion) { %>
+        <fieldset class="star-field">
+          <legend class="star-field__legend"><%= criterion.label %></legend>
+          <span class="star-field__hint">Toca una estrella, 1 es básico y 5 es sobresaliente.</span>
+          <div class="star-rating">
+            <% for (let i = 5; i >= 1; i--) { %>
+              <input type="radio" id="<%= criterion.key %>_<%= i %>" name="<%= criterion.key %>" value="<%= i %>" required>
+              <label for="<%= criterion.key %>_<%= i %>">
+                <span class="sr-only"><%= i %> de 5</span>
+                <svg aria-hidden="true"><use href="#icon-star"/></svg>
+              </label>
+            <% } %>
+          </div>
+        </fieldset>
+      <% }) %>
+
+      <button class="btn btn--primary btn--block" type="submit">
+        Enviar mi voto
+        <svg class="icon"><use href="#icon-check"/></svg>
+      </button>
+    </form>
+  <% } %>
+</div>

@@ -1,0 +1,40 @@
+<div class="page-head">
+  <h1 class="page-head__title">Directorio de stands</h1>
+  <p class="page-head__desc"><%= votedCount %> de <%= total %> stands votados. Puedes votar cada stand una sola vez.</p>
+</div>
+
+<% if (!votingOpen) { %>
+  <div class="alert alert--warn">
+    <svg class="icon"><use href="#icon-alert"/></svg>
+    <span>La votación está cerrada por ahora. Puedes seguir mirando el directorio, pero no se registrarán nuevos votos.</span>
+  </div>
+<% } %>
+
+<% if (!total) { %>
+  <div class="empty-state">
+    <svg class="icon"><use href="#icon-map-pin"/></svg>
+    <p>Todavía no hay stands activos para votar.</p>
+  </div>
+<% } else { %>
+  <div class="directory-grid">
+    <% projects.forEach(function (p) { %>
+      <% const voted = votedIds.has(p.id); %>
+      <a class="stand-card" href="/proyectos/<%= p.id %>">
+        <div class="stand-card__top">
+          <span class="stand-badge stand-badge--sm stand-badge--accent">
+            <span class="stand-badge__prefix">Stand</span>
+            <%= p.stand_number %>
+          </span>
+          <% if (voted) { %>
+            <span class="chip chip--done chip--stamp"><svg class="icon"><use href="#icon-check"/></svg>Votado</span>
+          <% } else { %>
+            <span class="chip chip--pending"><svg class="icon"><use href="#icon-circle"/></svg>Pendiente</span>
+          <% } %>
+        </div>
+        <p class="stand-card__name"><%= p.name %></p>
+        <p class="stand-card__meta"><%= p.program_name || 'Proyecto formativo' %> · Ficha <%= p.ficha_code %></p>
+        <% if (p.summary) { %><p class="stand-card__summary" style="margin-top:8px;"><%= p.summary %></p><% } %>
+      </a>
+    <% }) %>
+  </div>
+<% } %>

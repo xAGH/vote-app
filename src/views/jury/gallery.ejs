@@ -1,0 +1,40 @@
+<div class="page-head">
+  <h1 class="page-head__title">Estación de evaluación</h1>
+  <p class="page-head__desc"><%= submittedCount %> de <%= total %> evaluaciones enviadas.</p>
+</div>
+
+<% if (!votingOpen) { %>
+  <div class="alert alert--warn">
+    <svg class="icon"><use href="#icon-alert"/></svg>
+    <span>La calificación de jurados está cerrada por ahora. Puedes revisar tus evaluaciones enviadas, pero no se aceptan cambios.</span>
+  </div>
+<% } %>
+
+<% if (!total) { %>
+  <div class="empty-state">
+    <svg class="icon"><use href="#icon-map-pin"/></svg>
+    <p>Todavía no hay stands activos para evaluar.</p>
+  </div>
+<% } else { %>
+  <div class="directory-grid">
+    <% rows.forEach(function (r) { %>
+      <a class="stand-card" href="/jurado/proyectos/<%= r.project.id %>">
+        <div class="stand-card__top">
+          <span class="stand-badge stand-badge--sm stand-badge--accent">
+            <span class="stand-badge__prefix">Stand</span>
+            <%= r.project.stand_number %>
+          </span>
+          <% if (r.status === 'submitted') { %>
+            <span class="chip chip--done"><svg class="icon"><use href="#icon-check"/></svg>Enviada</span>
+          <% } else if (r.status === 'draft') { %>
+            <span class="chip chip--accent"><svg class="icon"><use href="#icon-clock"/></svg>Borrador <%= r.answered %>/<%= r.total %></span>
+          <% } else { %>
+            <span class="chip chip--pending"><svg class="icon"><use href="#icon-circle"/></svg>Sin iniciar</span>
+          <% } %>
+        </div>
+        <p class="stand-card__name"><%= r.project.name %></p>
+        <p class="stand-card__meta"><%= r.project.program_name || 'Proyecto formativo' %> · Ficha <%= r.project.ficha_code %></p>
+      </a>
+    <% }) %>
+  </div>
+<% } %>

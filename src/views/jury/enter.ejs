@@ -1,0 +1,36 @@
+<div class="credential" style="max-width:420px; margin:0 auto;">
+  <span class="credential__clip" aria-hidden="true"></span>
+  <h1 class="credential__title">Ingreso de jurado</h1>
+  <p class="credential__lede">Tu evaluación queda guardada automáticamente mientras calificas.</p>
+
+  <% if (formError) { %>
+    <div class="alert alert--warn" role="alert">
+      <svg class="icon"><use href="#icon-alert"/></svg>
+      <span><%= formError %></span>
+    </div>
+  <% } %>
+
+  <form method="post" action="/jurado/ingresar">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+    <div class="field">
+      <label class="field__label" for="judge_id">Tu nombre</label>
+      <select class="select" id="judge_id" name="judge_id" required>
+        <option value="" disabled selected>Selecciona tu nombre…</option>
+        <% judges.forEach(function (j) { %>
+          <option value="<%= j.id %>"><%= j.name %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="pin">PIN</label>
+      <input class="input" type="password" inputmode="numeric" id="pin" name="pin" placeholder="••••" required autocomplete="off">
+    </div>
+
+    <button class="btn btn--primary btn--block" type="submit">
+      Ingresar a mi estación
+      <svg class="icon"><use href="#icon-arrow-right"/></svg>
+    </button>
+  </form>
+</div>

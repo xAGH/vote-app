@@ -1,0 +1,34 @@
+<div class="center-frame">
+  <div style="width:100%; max-width:640px;">
+    <div class="page-head" style="text-align:center; margin-bottom:8px;">
+      <h1 class="page-head__title"><%= event.name %></h1>
+      <p class="page-head__desc" style="margin-left:auto; margin-right:auto;">
+        Recorre el directorio de stands, califica los proyectos y ayuda a decidir cuál se lleva el premio del ShowRoom.
+      </p>
+    </div>
+
+    <nav class="door-grid" aria-label="Elige tu rol">
+      <a class="door" href="/aprendiz">
+        <span class="door__icon"><svg class="icon"><use href="#icon-badge"/></svg></span>
+        <h2 class="door__title">Soy aprendiz</h2>
+        <p class="door__desc">Presenta tu credencial y vota los stands que visites hoy.</p>
+      </a>
+      <a class="door" href="/jurado">
+        <span class="door__icon"><svg class="icon"><use href="#icon-user"/></svg></span>
+        <h2 class="door__title">Soy jurado</h2>
+        <p class="door__desc">Ingresa a tu estación de evaluación y califica cada proyecto con la rúbrica oficial.</p>
+      </a>
+    </nav>
+
+    <% if (projects.length) { %>
+      <div class="floor-directory">
+        <p class="floor-directory__label">Directorio de hoy — <%= projects.length %> stand<%= projects.length === 1 ? '' : 's' %></p>
+        <div class="floor-directory__row">
+          <% projects.forEach(function (p) { %>
+            <span class="floor-directory__tile" title="<%= p.name %>"><%= p.stand_number %></span>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>

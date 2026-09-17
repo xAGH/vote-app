@@ -1,0 +1,85 @@
+<%- include('../partials/admin-nav') %>
+
+<div class="page-head">
+  <h1 class="page-head__title"><%= event.name %></h1>
+  <p class="page-head__desc">Fecha del evento: <%= event.event_date %></p>
+</div>
+
+<div class="stat-row">
+  <div class="stat-tile"><div class="stat-tile__value"><%= stats.projects %></div><div class="stat-tile__label">Stands activos</div></div>
+  <div class="stat-tile"><div class="stat-tile__value"><%= stats.fichas %></div><div class="stat-tile__label">Fichas visitantes</div></div>
+  <div class="stat-tile"><div class="stat-tile__value"><%= stats.judges %></div><div class="stat-tile__label">Jurados</div></div>
+  <div class="stat-tile"><div class="stat-tile__value"><%= stats.votes %></div><div class="stat-tile__label">Votos de aprendices</div></div>
+  <div class="stat-tile"><div class="stat-tile__value"><%= stats.evaluationsSubmitted %>/<%= stats.evaluationsExpected %></div><div class="stat-tile__label">Evaluaciones de jurado enviadas</div></div>
+</div>
+
+<div class="table-wrap" style="padding:22px; margin-bottom:20px;">
+  <h2 style="font-size:1rem; font-weight:700; margin-bottom:16px;">Estado de la votación</h2>
+  <div style="display:flex; flex-wrap:wrap; gap:14px;">
+    <form method="post" action="/admin/evento/aprendices" style="flex:1; min-width:220px;">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="open" value="<%= event.apprentice_voting_open ? '0' : '1' %>">
+      <p class="field__hint" style="margin-bottom:8px;">Voto de aprendices</p>
+      <button class="btn <%= event.apprentice_voting_open ? 'btn--danger' : 'btn--primary' %> btn--block" type="submit">
+        <%= event.apprentice_voting_open ? 'Cerrar votación de aprendices' : 'Abrir votación de aprendices' %>
+      </button>
+      <p class="field__hint" style="margin-top:8px;">
+        Estado actual:
+        <span class="chip <%= event.apprentice_voting_open ? 'chip--done' : 'chip--pending' %>"><%= event.apprentice_voting_open ? 'Abierta' : 'Cerrada' %></span>
+      </p>
+    </form>
+    <form method="post" action="/admin/evento/jurados" style="flex:1; min-width:220px;">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="open" value="<%= event.jury_voting_open ? '0' : '1' %>">
+      <p class="field__hint" style="margin-bottom:8px;">Calificación de jurados</p>
+      <button class="btn <%= event.jury_voting_open ? 'btn--danger' : 'btn--primary' %> btn--block" type="submit">
+        <%= event.jury_voting_open ? 'Cerrar calificación de jurados' : 'Abrir calificación de jurados' %>
+      </button>
+      <p class="field__hint" style="margin-top:8px;">
+        Estado actual:
+        <span class="chip <%= event.jury_voting_open ? 'chip--done' : 'chip--pending' %>"><%= event.jury_voting_open ? 'Abierta' : 'Cerrada' %></span>
+      </p>
+    </form>
+  </div>
+</div>
+
+<div class="table-wrap" style="padding:22px; margin-bottom:20px;">
+  <h2 style="font-size:1rem; font-weight:700; margin-bottom:16px;">Configuración del evento</h2>
+  <form method="post" action="/admin/evento/config" style="display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end;">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="field" style="flex:2; min-width:220px; margin-bottom:0;">
+      <label class="field__label" for="name">Nombre del evento</label>
+      <input class="input" id="name" name="name" value="<%= event.name %>" required>
+    </div>
+    <div class="field" style="flex:1; min-width:160px; margin-bottom:0;">
+      <label class="field__label" for="event_date">Fecha (AAAA-MM-DD)</label>
+      <input class="input" id="event_date" name="event_date" value="<%= event.event_date %>" required pattern="\d{4}-\d{2}-\d{2}">
+    </div>
+    <button class="btn btn--ghost" type="submit">Guardar</button>
+  </form>
+</div>
+
+<div class="table-wrap" style="padding:22px;">
+  <div class="section-toolbar" style="margin-bottom:14px;">
+    <h2 style="font-size:1rem; font-weight:700;">Sincronización de asistencia — <%= event.event_date %></h2>
+    <a class="btn btn--ghost btn--sm" href="/admin/fichas">Gestionar fichas <svg class="icon"><use href="#icon-arrow-right"/></svg></a>
+  </div>
+  <% if (!syncByFicha.length) { %>
+    <p class="field__hint">Todavía no hay fichas visitantes configuradas.</p>
+  <% } else { %>
+    <% syncByFicha.forEach(function (row) { %>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);">
+        <span><%= row.ficha.label %></span>
+        <% if (!row.sync) { %>
+          <span class="chip chip--pending">Sin sincronizar</span>
+        <% } else if (row.sync.error) { %>
+          <span class="chip chip--warn">Error de sincronización</span>
+        <% } else if (!row.sync.has_sessions) { %>
+          <span class="chip chip--warn">Sin asistencia registrada</span>
+        <% } else { %>
+          <span class="chip chip--done"><%= row.sync.roster_count %> en el roster</span>
+        <% } %>
+      </div>
+    <% }) %>
+  <% } %>
+</div>

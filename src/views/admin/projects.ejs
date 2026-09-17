@@ -1,0 +1,40 @@
+<%- include('../partials/admin-nav') %>
+
+<div class="section-toolbar">
+  <div class="page-head" style="margin-bottom:0;">
+    <h1 class="page-head__title">Directorio de expositores</h1>
+  </div>
+  <a class="btn btn--primary" href="/admin/proyectos/nuevo"><svg class="icon"><use href="#icon-plus"/></svg>Nuevo proyecto</a>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Stand</th><th>Proyecto</th><th>Ficha expositora</th><th>Programa</th><th>Estado</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% projects.forEach(function (p) { %>
+        <tr style="opacity:<%= p.is_active ? '1' : '0.5' %>;">
+          <td><span class="stand-badge stand-badge--sm"><%= p.stand_number %></span></td>
+          <td><strong><%= p.name %></strong></td>
+          <td><%= p.ficha_code %></td>
+          <td><%= p.program_name || '—' %></td>
+          <td>
+            <span class="chip <%= p.is_active ? 'chip--done' : 'chip--pending' %>"><%= p.is_active ? 'Activo' : 'Inactivo' %></span>
+          </td>
+          <td style="text-align:right; white-space:nowrap;">
+            <a class="btn btn--ghost btn--sm" href="/admin/proyectos/<%= p.id %>/editar"><svg class="icon"><use href="#icon-pencil"/></svg></a>
+            <form method="post" action="/admin/proyectos/<%= p.id %>/estado" style="display:inline;">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <input type="hidden" name="active" value="<%= p.is_active ? '0' : '1' %>">
+              <button class="btn btn--ghost btn--sm" type="submit"><svg class="icon"><use href="#icon-<%= p.is_active ? 'x' : 'check' %>"/></svg></button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!projects.length) { %>
+        <tr><td colspan="6" class="empty-state">Todavía no hay proyectos. Crea el primero.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>

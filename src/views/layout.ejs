@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title><%= typeof title !== 'undefined' ? title + ' · ' + event.name : event.name %></title>
+  <meta name="description" content="Votación y calificación de proyectos formativos — <%= event.name %>">
+  <meta name="theme-color" content="#15181c">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23d9540c'/%3E%3Ctext x='12' y='17' font-family='Arial' font-weight='700' font-size='14' fill='white' text-anchor='middle'%3ESR%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<!--
+  THESIS: la app de votación de un ShowRoom no es un formulario de encuesta ni
+  un dashboard: es el directorio y la credencial de una feria real, donde
+  votar es presentar tu gafete y calificar es llenar la planilla de una
+  estación de jurado — nunca una tarjeta gris con un botón "Votar".
+  OWN-WORLD: señalética de piso de feria. Piso gris muy claro (nunca
+  crema/parchment), tinta casi negra, un único acento ámbar de señal
+  reservado a acciones primarias e insignias de stand. Big Shoulders
+  (rotulado de vinilo cortado / letras de fachada de edificio) para
+  numerales y títulos, IBM Plex Sans para cuerpo y formularios. Estados como
+  sellos de tinta (VOTADO/APROBADO en verde de sello), nunca badges
+  genéricos.
+  STORY: el aprendiz entiende que está presentando su credencial una vez y
+  recorriendo un directorio numerado de stands; el jurado entiende que está
+  en una estación de evaluación con planilla oficial, avance visible y
+  puntaje corriendo en vivo.
+  FIRST VIEWPORT: portada con dos puertas (aprendiz/jurado) como el mostrador
+  de acreditación de una feria; la galería es un directorio en grid de
+  tarjetas de stand con insignia numérica grande, nombre, ficha y un chip de
+  estado tipo sello.
+  FORM: dirección 4 de 7 en la lista propia ordenada por resonancia (piso de
+  feria / señalética), seed key b9a5d991, roll degradado (sin red desde
+  Node en este entorno; confirmado con el usuario vía AskUserQuestion).
+  FINISH: unreviewed and undocumented is unfinished; this build ends with
+  the finish review, the verdict, and DESIGN.md.
+-->
+<%- include('partials/icons') %>
+<div class="shell">
+  <header class="topbar">
+    <a class="topbar__brand" href="/">
+      <span class="topbar__mark">SR</span>
+      <span><%= event.name %></span>
+    </a>
+    <div class="topbar__meta">
+      <% if (typeof voter !== 'undefined' && voter) { %>
+        <span class="topbar__meta-primary"><svg class="icon"><use href="#icon-badge"/></svg> <%= voter.fullName %></span>
+        <a class="topbar__exit" href="/aprendiz/salir">Salir</a>
+      <% } else if (typeof judge !== 'undefined' && judge) { %>
+        <span class="topbar__meta-primary"><svg class="icon"><use href="#icon-user"/></svg> <%= judge.name %></span>
+        <a class="topbar__exit" href="/jurado/salir">Salir</a>
+      <% } else if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+        <span class="topbar__meta-primary">Administración</span>
+        <a class="topbar__exit" href="/admin/salir">Salir</a>
+      <% } else { %>
+        <span><%= event.event_date %></span>
+      <% } %>
+    </div>
+  </header>
+
+  <main class="<%= typeof mainClass !== 'undefined' ? mainClass : '' %>">
+    <% if (typeof flash !== 'undefined' && flash) { %>
+      <div class="alert alert--<%= flash.type === 'done' ? 'done' : (flash.type === 'warn' ? 'warn' : 'info') %>" role="status">
+        <svg class="icon"><use href="#icon-<%= flash.type === 'done' ? 'check' : 'alert' %>"/></svg>
+        <span><%= flash.message %></span>
+      </div>
+    <% } %>
+    <%- body %>
+  </main>
+
+  <p class="footer-note">SENA — Centro de Comercio y Turismo, Regional Quindío · <%= event.name %></p>
+</div>
+<script src="/app.js" defer></script>
+</body>
+</html>

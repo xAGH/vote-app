@@ -1,0 +1,52 @@
+<%- include('../partials/admin-nav') %>
+
+<a class="back-link" href="/admin/proyectos"><svg class="icon"><use href="#icon-chevron-left"/></svg> Volver a proyectos</a>
+
+<div class="credential" style="max-width:560px;">
+  <h1 class="credential__title" style="margin-bottom:22px;"><%= title %></h1>
+
+  <% if (formError) { %>
+    <div class="alert alert--warn" role="alert">
+      <svg class="icon"><use href="#icon-alert"/></svg>
+      <span><%= formError %></span>
+    </div>
+  <% } %>
+
+  <form method="post" action="<%= project && project.id ? '/admin/proyectos/' + project.id : '/admin/proyectos' %>">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+    <div style="display:flex; gap:12px;">
+      <div class="field" style="flex:1;">
+        <label class="field__label" for="stand_number">Número de stand</label>
+        <input class="input" type="number" min="1" id="stand_number" name="stand_number" value="<%= project ? project.stand_number : '' %>" required>
+      </div>
+      <div class="field" style="flex:2;">
+        <label class="field__label" for="ficha_code">Ficha expositora</label>
+        <input class="input" id="ficha_code" name="ficha_code" value="<%= project ? project.ficha_code : '' %>" required>
+        <span class="field__hint">No debe coincidir con ninguna ficha visitante (se bloquea el autovoto).</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="name">Nombre del proyecto</label>
+      <input class="input" id="name" name="name" value="<%= project ? project.name : '' %>" required>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="program_name">Programa de formación</label>
+      <input class="input" id="program_name" name="program_name" value="<%= project ? (project.program_name || '') : '' %>" placeholder="ADSO">
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="team_members">Integrantes del equipo (uno por línea)</label>
+      <textarea class="textarea" id="team_members" name="team_members" placeholder="María Gómez&#10;Carlos Ruiz"><%= project ? (project.team_members || '') : '' %></textarea>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="summary">Resumen del proyecto</label>
+      <textarea class="textarea" id="summary" name="summary" placeholder="Qué problema resuelve, en una o dos frases."><%= project ? (project.summary || '') : '' %></textarea>
+    </div>
+
+    <button class="btn btn--primary btn--block" type="submit">Guardar proyecto</button>
+  </form>
+</div>

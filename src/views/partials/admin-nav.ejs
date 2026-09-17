@@ -1,0 +1,15 @@
+<nav aria-label="Secciones de administración" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:26px; border-bottom:1px solid var(--line); padding-bottom:2px;">
+  <% const tabs = [
+    { href: '/admin', label: 'Panel' },
+    { href: '/admin/proyectos', label: 'Proyectos' },
+    { href: '/admin/fichas', label: 'Fichas visitantes' },
+    { href: '/admin/jurados', label: 'Jurados' },
+    { href: '/admin/resultados', label: 'Resultados' },
+  ]; %>
+  <% tabs.forEach(function (t) { %>
+    <a href="<%= t.href %>"
+       style="padding:10px 14px; font-size:0.88rem; font-weight:600; text-decoration:none; border-bottom:2.5px solid <%= currentPath === t.href ? 'var(--accent)' : 'transparent' %>; color:<%= currentPath === t.href ? 'var(--ink)' : 'var(--ink-soft)' %>;">
+      <%= t.label %>
+    </a>
+  <% }) %>
+</nav>
