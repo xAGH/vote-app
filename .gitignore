@@ -1,0 +1,10 @@
+node_modules/
+data/
+.env
+*.db
+*.db-shm
+*.db-wal
+
+# Estado local del hook de diseño de Impeccable (sesiones, contadores de
+# edición); no es parte del sistema de diseño documentado, .impeccable/design.json sí.
+.impeccable/hook.cache.json
