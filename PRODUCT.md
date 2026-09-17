@@ -57,8 +57,8 @@ a nivel de base de datos, no de honestidad.
 - La asistencia real de cada ficha visitante se consulta al sistema Pulse (otro proyecto del
   mismo autor: `~/code/pulse`), vía su endpoint M2M `GET /integrations/attendance` documentado
   en `~/code/pulse/docs/09-m2m-integrations.md`. Devuelve, para una ficha y fecha, el roster de
-  aprendices con estado `PRESENT`/`ABSENT`. Solo puede votar un aprendiz que figure `PRESENT`
-  ese día.
+  aprendices con estado `PRESENT`/`ABSENT`/`LATE`. Puede votar un aprendiz que figure `PRESENT`
+  o `LATE` ese día; solo `ABSENT` bloquea el voto.
 - Los expositores (aprendices de las fichas que presentan) no votan.
 - El jurado califica con la rúbrica oficial SENA (`Rubrica para ADSO.xlsx`, hoja "Rubrica
   SENA"): 18 criterios en 6 bloques (Actitudinal, Dominio del tema, Técnico, Innovación,
@@ -76,9 +76,10 @@ a nivel de base de datos, no de honestidad.
 
 - Un aprendiz vota como máximo una vez por proyecto (regla forzada con índice único en la
   base de datos, no solo validación de aplicación).
-- Solo aprendices con asistencia `PRESENT` ese día pueden votar; la validación se hace contra
-  una caché local del roster de Pulse (sincronizada por el admin antes del evento) para que la
-  votación no dependa de que Pulse esté disponible en el momento exacto del voto.
+- Solo aprendices con asistencia `ABSENT` ese día quedan bloqueados para votar (`PRESENT` y
+  `LATE` sí pueden); la validación se hace contra una caché local del roster de Pulse
+  (sincronizada por el admin antes del evento) para que la votación no dependa de que Pulse
+  esté disponible en el momento exacto del voto.
 - El formulario de estrellas debe funcionar sin JavaScript (radios nativos estilizados);
   JS solo añade autoguardado y promedio en vivo.
 - Todo el contenido visible está en español, incluidos los mensajes de error.

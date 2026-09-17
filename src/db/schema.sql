@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS attendance_roster (
   date        TEXT NOT NULL,                -- YYYY-MM-DD
   doc_number  TEXT NOT NULL,
   full_name   TEXT NOT NULL,
-  status      TEXT NOT NULL CHECK (status IN ('PRESENT', 'ABSENT')),
+  status      TEXT NOT NULL CHECK (status IN ('PRESENT', 'ABSENT', 'LATE')),
   fetched_at  TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (ficha_code, date, doc_number)
 );

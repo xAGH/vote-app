@@ -22,8 +22,9 @@ function mockRoster(fichaCode, date) {
       { docType: 'CC', docNumber: '1000000002', fullName: 'Luis Ramírez (demo)', status: 'PRESENT', absentHours: 0, justification: null },
       { docType: 'CC', docNumber: '1000000003', fullName: 'Camila Ríos (demo)', status: 'ABSENT', absentHours: 4, justification: null },
       { docType: 'CC', docNumber: '1000000004', fullName: 'Jorge Pérez (demo)', status: 'PRESENT', absentHours: 0, justification: null },
+      { docType: 'CC', docNumber: '1000000005', fullName: 'Sofía Gómez (demo)', status: 'LATE', absentHours: 1, justification: null },
     ],
-    summary: { total: 4, present: 3, absent: 1 },
+    summary: { total: 5, present: 3, absent: 1, late: 1 },
   };
 }
 
@@ -158,6 +159,7 @@ function getSyncStatus(fichaCode, date) {
  * Verifica un documento contra la caché local de asistencia.
  * Devuelve { ok: true, fullName } o { ok: false, reason }.
  * reason: 'NOT_SYNCED' | 'NO_SESSION' | 'NOT_FOUND' | 'ABSENT'
+ * PRESENT y LATE pueden votar; solo ABSENT bloquea el voto.
  */
 function verifyAttendance(fichaCode, date, docNumber) {
   const db = getDb();
@@ -177,7 +179,7 @@ function verifyAttendance(fichaCode, date, docNumber) {
     .get(fichaCode, date, docNumber.trim());
 
   if (!row) return { ok: false, reason: 'NOT_FOUND' };
-  if (row.status !== 'PRESENT') return { ok: false, reason: 'ABSENT' };
+  if (row.status === 'ABSENT') return { ok: false, reason: 'ABSENT' };
 
   return { ok: true, fullName: row.full_name };
 }
