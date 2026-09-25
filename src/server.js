@@ -67,16 +67,23 @@ app.use((req, res, next) => {
   res.locals.event = getDb().prepare('SELECT * FROM event WHERE id = 1').get();
   res.locals.voter = req.session.voter || null;
   res.locals.judge = req.session.judge || null;
-  res.locals.isAdmin = !!req.session.isAdmin;
+  // /admin usa HTTP Basic Auth (ver lib/auth.js#basicAuthAdmin), no sesión:
+  // si la request llegó hasta acá renderizando una vista de /admin, ya pasó
+  // esa autenticación.
+  res.locals.isAdmin = req.path.startsWith('/admin');
   res.locals.currentPath = req.path;
   next();
 });
 app.use(flashMiddleware);
 
+// /admin va primero: su router queda montado bajo el prefijo /admin y
+// resuelve toda petición que matchee ahí (Basic Auth + rutas, sin fallthrough),
+// así nunca pasa por el router.use(csrfMiddleware) sin path de apprentice/jury
+// de abajo, que al estar montados en '/' intercepta cualquier POST de la app.
+app.use('/admin', require('./routes/admin'));
 app.use('/', require('./routes/public'));
 app.use('/', require('./routes/apprentice'));
 app.use('/', require('./routes/jury'));
-app.use('/admin', require('./routes/admin'));
 
 app.use((req, res) => {
   res.status(404).render('error', {

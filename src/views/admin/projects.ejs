@@ -25,7 +25,6 @@
           <td style="text-align:right; white-space:nowrap;">
             <a class="btn btn--ghost btn--sm" href="/admin/proyectos/<%= p.id %>/editar"><svg class="icon"><use href="#icon-pencil"/></svg></a>
             <form method="post" action="/admin/proyectos/<%= p.id %>/estado" style="display:inline;">
-              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <input type="hidden" name="active" value="<%= p.is_active ? '0' : '1' %>">
               <button class="btn btn--ghost btn--sm" type="submit"><svg class="icon"><use href="#icon-<%= p.is_active ? 'x' : 'check' %>"/></svg></button>
             </form>

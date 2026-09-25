@@ -17,7 +17,6 @@
   <h2 style="font-size:1rem; font-weight:700; margin-bottom:16px;">Estado de la votación</h2>
   <div style="display:flex; flex-wrap:wrap; gap:14px;">
     <form method="post" action="/admin/evento/aprendices" style="flex:1; min-width:220px;">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <input type="hidden" name="open" value="<%= event.apprentice_voting_open ? '0' : '1' %>">
       <p class="field__hint" style="margin-bottom:8px;">Voto de aprendices</p>
       <button class="btn <%= event.apprentice_voting_open ? 'btn--danger' : 'btn--primary' %> btn--block" type="submit">
@@ -29,7 +28,6 @@
       </p>
     </form>
     <form method="post" action="/admin/evento/jurados" style="flex:1; min-width:220px;">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <input type="hidden" name="open" value="<%= event.jury_voting_open ? '0' : '1' %>">
       <p class="field__hint" style="margin-bottom:8px;">Calificación de jurados</p>
       <button class="btn <%= event.jury_voting_open ? 'btn--danger' : 'btn--primary' %> btn--block" type="submit">
@@ -46,7 +44,6 @@
 <div class="table-wrap" style="padding:22px; margin-bottom:20px;">
   <h2 style="font-size:1rem; font-weight:700; margin-bottom:16px;">Configuración del evento</h2>
   <form method="post" action="/admin/evento/config" style="display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end;">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <div class="field" style="flex:2; min-width:220px; margin-bottom:0;">
       <label class="field__label" for="name">Nombre del evento</label>
       <input class="input" id="name" name="name" value="<%= event.name %>" required>

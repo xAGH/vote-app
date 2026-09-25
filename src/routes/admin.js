@@ -6,47 +6,23 @@ const router = express.Router();
 
 const { getDb } = require('../db');
 const { syncAttendance, getSyncStatus } = require('../lib/pulse');
-const { hashPin, csrfMiddleware, ensureCsrfToken, requireAdmin, timingSafeEqualStrings } = require('../lib/auth');
+const { hashPin, basicAuthAdmin } = require('../lib/auth');
 const { setFlash } = require('../lib/flash');
 const { apprenticeResults, juryResults } = require('../lib/scoring');
 
-router.use(csrfMiddleware);
-
-const loginLimiter = rateLimit({
+// Limita intentos de fuerza bruta contra la contraseña de admin. No distingue
+// aciertos de fallos (express-rate-limit cuenta todo), pero como el panel se
+// usa poco durante el evento, un límite generoso igual frena el brute force.
+const adminLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 15,
+  limit: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  message: 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
+  message: 'Demasiadas solicitudes. Espera unos minutos e inténtalo de nuevo.',
 });
 
-// ---------- Ingreso ----------
-
-router.get('/ingresar', (req, res) => {
-  if (req.session.isAdmin) return res.redirect('/admin');
-  res.render('admin/login', { title: 'Administración', csrfToken: ensureCsrfToken(req), formError: null });
-});
-
-router.post('/ingresar', loginLimiter, (req, res) => {
-  const password = String(req.body.password || '');
-  const expected = process.env.ADMIN_PASSWORD || '';
-  if (!expected || !timingSafeEqualStrings(password, expected)) {
-    return res.render('admin/login', {
-      title: 'Administración',
-      csrfToken: ensureCsrfToken(req),
-      formError: 'Contraseña incorrecta.',
-    });
-  }
-  req.session.isAdmin = true;
-  res.redirect('/admin');
-});
-
-router.get('/salir', (req, res) => {
-  delete req.session.isAdmin;
-  res.redirect('/');
-});
-
-router.use(requireAdmin);
+router.use(adminLimiter);
+router.use(basicAuthAdmin);
 router.use((req, res, next) => {
   res.locals.mainClass = 'main--wide';
   next();
@@ -75,7 +51,6 @@ router.get('/', (req, res) => {
     title: 'Panel de administración',
     stats,
     syncByFicha,
-    csrfToken: ensureCsrfToken(req),
   });
 });
 
@@ -120,7 +95,7 @@ router.get('/fichas', (req, res) => {
   const db = getDb();
   const fichas = db.prepare('SELECT * FROM visiting_fichas ORDER BY is_active DESC, label').all();
   const syncByFicha = fichas.map((f) => ({ ficha: f, sync: getSyncStatus(f.ficha_code, res.locals.event.event_date) }));
-  res.render('admin/fichas', { title: 'Fichas visitantes', syncByFicha, csrfToken: ensureCsrfToken(req) });
+  res.render('admin/fichas', { title: 'Fichas visitantes', syncByFicha });
 });
 
 router.post('/fichas', (req, res) => {
@@ -188,18 +163,18 @@ router.post('/fichas/sincronizar-todas', async (req, res) => {
 router.get('/proyectos', (req, res) => {
   const db = getDb();
   const projects = db.prepare('SELECT * FROM projects ORDER BY is_active DESC, stand_number').all();
-  res.render('admin/projects', { title: 'Proyectos', projects, csrfToken: ensureCsrfToken(req) });
+  res.render('admin/projects', { title: 'Proyectos', projects });
 });
 
 router.get('/proyectos/nuevo', (req, res) => {
-  res.render('admin/project-form', { title: 'Nuevo proyecto', project: null, csrfToken: ensureCsrfToken(req), formError: null });
+  res.render('admin/project-form', { title: 'Nuevo proyecto', project: null, formError: null });
 });
 
 router.post('/proyectos', (req, res) => {
   const db = getDb();
   const data = readProjectForm(req.body);
   if (data.error) {
-    return res.render('admin/project-form', { title: 'Nuevo proyecto', project: req.body, csrfToken: ensureCsrfToken(req), formError: data.error });
+    return res.render('admin/project-form', { title: 'Nuevo proyecto', project: req.body, formError: data.error });
   }
   try {
     db.prepare(
@@ -210,7 +185,7 @@ router.post('/proyectos', (req, res) => {
     res.redirect('/admin/proyectos');
   } catch (err) {
     const msg = String(err.message).includes('UNIQUE') ? 'Ya existe un proyecto con ese número de stand.' : 'No se pudo guardar el proyecto.';
-    res.render('admin/project-form', { title: 'Nuevo proyecto', project: req.body, csrfToken: ensureCsrfToken(req), formError: msg });
+    res.render('admin/project-form', { title: 'Nuevo proyecto', project: req.body, formError: msg });
   }
 });
 
@@ -218,7 +193,7 @@ router.get('/proyectos/:id/editar', (req, res) => {
   const db = getDb();
   const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
   if (!project) return res.redirect('/admin/proyectos');
-  res.render('admin/project-form', { title: 'Editar proyecto', project, csrfToken: ensureCsrfToken(req), formError: null });
+  res.render('admin/project-form', { title: 'Editar proyecto', project, formError: null });
 });
 
 router.post('/proyectos/:id', (req, res) => {
@@ -231,7 +206,6 @@ router.post('/proyectos/:id', (req, res) => {
     return res.render('admin/project-form', {
       title: 'Editar proyecto',
       project: { ...existing, ...req.body },
-      csrfToken: ensureCsrfToken(req),
       formError: data.error,
     });
   }
@@ -244,7 +218,7 @@ router.post('/proyectos/:id', (req, res) => {
     res.redirect('/admin/proyectos');
   } catch (err) {
     const msg = String(err.message).includes('UNIQUE') ? 'Ya existe un proyecto con ese número de stand.' : 'No se pudo guardar el proyecto.';
-    res.render('admin/project-form', { title: 'Editar proyecto', project: { ...existing, ...req.body }, csrfToken: ensureCsrfToken(req), formError: msg });
+    res.render('admin/project-form', { title: 'Editar proyecto', project: { ...existing, ...req.body }, formError: msg });
   }
 });
 
@@ -276,7 +250,7 @@ function readProjectForm(body) {
 router.get('/jurados', (req, res) => {
   const db = getDb();
   const judges = db.prepare('SELECT id, name, is_active, created_at FROM judges ORDER BY is_active DESC, name').all();
-  res.render('admin/judges', { title: 'Jurados', judges, csrfToken: ensureCsrfToken(req) });
+  res.render('admin/judges', { title: 'Jurados', judges });
 });
 
 router.post('/jurados', (req, res) => {

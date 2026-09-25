@@ -6,7 +6,6 @@
     <p class="page-head__desc">Solo los aprendices de estas fichas pueden votar, verificados contra la asistencia registrada en Pulse. Sincroniza antes de abrir la votación.</p>
   </div>
   <form method="post" action="/admin/fichas/sincronizar-todas">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <button class="btn btn--ink" type="submit"><svg class="icon"><use href="#icon-refresh"/></svg>Sincronizar todas</button>
   </form>
 </div>
@@ -14,7 +13,6 @@
 <div class="table-wrap" style="padding:22px; margin-bottom:24px;">
   <h2 style="font-size:0.95rem; font-weight:700; margin-bottom:14px;">Agregar ficha</h2>
   <form method="post" action="/admin/fichas" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <div class="field" style="margin-bottom:0; flex:1; min-width:160px;">
       <label class="field__label" for="ficha_code">Código de ficha</label>
       <input class="input" id="ficha_code" name="ficha_code" placeholder="2612345" required>
@@ -50,11 +48,9 @@
           <td><%= row.sync ? row.sync.roster_count : '—' %></td>
           <td style="text-align:right; white-space:nowrap;">
             <form method="post" action="/admin/fichas/<%= row.ficha.id %>/sincronizar" style="display:inline;">
-              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <button class="btn btn--ghost btn--sm" type="submit"><svg class="icon"><use href="#icon-refresh"/></svg></button>
             </form>
             <form method="post" action="/admin/fichas/<%= row.ficha.id %>/eliminar" style="display:inline;">
-              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <button class="btn btn--ghost btn--sm" type="submit"><svg class="icon"><use href="#icon-trash"/></svg></button>
             </form>
           </td>

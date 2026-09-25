@@ -8,7 +8,6 @@
 <div class="table-wrap" style="padding:22px; margin-bottom:24px;">
   <h2 style="font-size:0.95rem; font-weight:700; margin-bottom:14px;">Agregar jurado</h2>
   <form method="post" action="/admin/jurados" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <div class="field" style="margin-bottom:0; flex:1; min-width:220px;">
       <label class="field__label" for="name">Nombre</label>
       <input class="input" id="name" name="name" placeholder="Nombre del jurado" required>
@@ -27,11 +26,9 @@
           <td><span class="chip <%= j.is_active ? 'chip--done' : 'chip--pending' %>"><%= j.is_active ? 'Activo' : 'Inactivo' %></span></td>
           <td style="text-align:right; white-space:nowrap;">
             <form method="post" action="/admin/jurados/<%= j.id %>/regenerar-pin" style="display:inline;">
-              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <button class="btn btn--ghost btn--sm" type="submit">Nuevo PIN</button>
             </form>
             <form method="post" action="/admin/jurados/<%= j.id %>/estado" style="display:inline;">
-              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <input type="hidden" name="active" value="<%= j.is_active ? '0' : '1' %>">
               <button class="btn btn--ghost btn--sm" type="submit"><svg class="icon"><use href="#icon-<%= j.is_active ? 'x' : 'check' %>"/></svg></button>
             </form>

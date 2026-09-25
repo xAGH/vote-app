@@ -72,9 +72,33 @@ function requireJudge(req, res, next) {
   return next();
 }
 
-function requireAdmin(req, res, next) {
-  if (!req.session.isAdmin) return res.redirect('/admin/ingresar');
-  return next();
+/**
+ * Protege /admin con HTTP Basic Auth en vez de sesión + CSRF: no depende de
+ * cookies ni de Set-Cookie llegando al navegador (esto último resultó no
+ * viajar de forma confiable a través de Cloudflare Tunnel + Traefik en
+ * producción). El navegador reenvía el header Authorization en cada request.
+ */
+function basicAuthAdmin(req, res, next) {
+  const expected = process.env.ADMIN_PASSWORD || '';
+  const header = req.headers.authorization || '';
+  const [scheme, encoded] = header.split(' ');
+
+  if (expected && scheme === 'Basic' && encoded) {
+    let password = '';
+    try {
+      const decoded = Buffer.from(encoded, 'base64').toString('utf8');
+      password = decoded.slice(decoded.indexOf(':') + 1);
+    } catch {
+      password = '';
+    }
+    if (timingSafeEqualStrings(password, expected)) {
+      req.isAdmin = true;
+      return next();
+    }
+  }
+
+  res.set('WWW-Authenticate', 'Basic realm="Administracion ShowRoom"');
+  return res.status(401).send('Autenticación requerida.');
 }
 
 module.exports = {
@@ -86,5 +110,5 @@ module.exports = {
   csrfMiddleware,
   requireVoter,
   requireJudge,
-  requireAdmin,
+  basicAuthAdmin,
 };
