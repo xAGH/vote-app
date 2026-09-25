@@ -38,7 +38,8 @@
             <% if (!row.sync) { %>
               <span class="chip chip--pending"><svg class="icon"><use href="#icon-circle"/></svg>Sin sincronizar</span>
             <% } else if (row.sync.error) { %>
-              <span class="chip chip--warn" title="<%= row.sync.error %>"><svg class="icon"><use href="#icon-alert"/></svg>Error</span>
+              <span class="chip chip--warn"><svg class="icon"><use href="#icon-alert"/></svg>Error</span>
+              <span style="display:block;font-size:0.78rem;color:var(--warn,#b45309);margin-top:3px;word-break:break-word;"><%= row.sync.error %></span>
             <% } else if (!row.sync.has_sessions) { %>
               <span class="chip chip--warn"><svg class="icon"><use href="#icon-alert"/></svg>Sin sesión hoy</span>
             <% } else { %>

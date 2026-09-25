@@ -6,7 +6,7 @@ const router = express.Router();
 
 const { getDb } = require('../db');
 const { verifyPin, csrfMiddleware, ensureCsrfToken, requireJudge, signJudgeToken } = require('../lib/auth');
-const { setFlash } = require('../lib/flash');
+const { makeFlashParam } = require('../lib/flash');
 const { JURY_RUBRIC, JURY_CRITERIA_KEYS, JURY_CRITERIA_COUNT } = require('../lib/rubric');
 const { round1 } = require('../lib/scoring');
 
@@ -194,14 +194,12 @@ router.post('/jurado/proyectos/:id/enviar', requireJudge, (req, res) => {
     });
   }
   if (!res.locals.event.jury_voting_open) {
-    setFlash(req, 'warn', 'La calificación de jurados ya no está abierta.');
-    return res.redirect(`/jurado/proyectos?_j=${tok}`);
+    return res.redirect(`/jurado/proyectos?_j=${tok}&${makeFlashParam('warn', 'La calificación de jurados ya no está abierta.')}`);
   }
 
   const evaluation = loadEvaluation(db, judgeId, project.id);
   if (evaluation.submitted_at) {
-    setFlash(req, 'warn', `Ya habías enviado tu evaluación de ${project.name}.`);
-    return res.redirect(`/jurado/proyectos?_j=${tok}`);
+    return res.redirect(`/jurado/proyectos?_j=${tok}&${makeFlashParam('warn', `Ya habías enviado tu evaluación de ${project.name}.`)}`);
   }
 
   const upsert = db.prepare(
@@ -246,8 +244,7 @@ router.post('/jurado/proyectos/:id/enviar', requireJudge, (req, res) => {
   }
 
   db.prepare('UPDATE jury_evaluations SET submitted_at = datetime(\'now\') WHERE id = ?').run(evaluation.id);
-  setFlash(req, 'done', `Evaluación enviada para ${project.name}.`);
-  res.redirect(`/jurado/proyectos?_j=${tok}`);
+  res.redirect(`/jurado/proyectos?_j=${tok}&${makeFlashParam('done', `Evaluación enviada para ${project.name}.`)}`);
 });
 
 router.post('/jurado/proyectos/:id/editar', requireJudge, (req, res) => {
@@ -264,8 +261,7 @@ router.post('/jurado/proyectos/:id/editar', requireJudge, (req, res) => {
     });
   }
   if (!res.locals.event.jury_voting_open) {
-    setFlash(req, 'warn', 'La calificación de jurados ya no está abierta, no puedes editarla.');
-    return res.redirect(`/jurado/proyectos?_j=${tok}`);
+    return res.redirect(`/jurado/proyectos?_j=${tok}&${makeFlashParam('warn', 'La calificación de jurados ya no está abierta, no puedes editarla.')}`);
   }
 
   const evaluation = db
@@ -273,9 +269,8 @@ router.post('/jurado/proyectos/:id/editar', requireJudge, (req, res) => {
     .get(judgeId, project.id);
   if (evaluation && evaluation.submitted_at) {
     db.prepare('UPDATE jury_evaluations SET submitted_at = NULL WHERE id = ?').run(evaluation.id);
-    setFlash(req, 'done', `Evaluación de ${project.name} habilitada para edición.`);
   }
-  res.redirect(`/jurado/proyectos/${project.id}?_j=${tok}`);
+  res.redirect(`/jurado/proyectos/${project.id}?_j=${tok}&${makeFlashParam('done', `Evaluación de ${project.name} habilitada para edición.`)}`);
 });
 
 module.exports = router;

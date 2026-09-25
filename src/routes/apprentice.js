@@ -6,7 +6,7 @@ const router = express.Router();
 const { getDb } = require('../db');
 const { verifyAttendance } = require('../lib/pulse');
 const { csrfMiddleware, ensureCsrfToken, requireVoter, signVoterToken } = require('../lib/auth');
-const { setFlash } = require('../lib/flash');
+const { makeFlashParam } = require('../lib/flash');
 const { APPRENTICE_RUBRIC } = require('../lib/rubric');
 
 router.use(csrfMiddleware);
@@ -141,8 +141,7 @@ router.get('/proyectos/:id', requireVoter, (req, res) => {
   }
 
   if (project.ficha_code === voter.fichaCode) {
-    setFlash(req, 'warn', 'No puedes votar el stand de tu propia ficha.');
-    return res.redirect(`/proyectos?_v=${tok}`);
+    return res.redirect(`/proyectos?_v=${tok}&${makeFlashParam('warn', 'No puedes votar el stand de tu propia ficha.')}`);
   }
 
   const existingVote = db
@@ -176,12 +175,10 @@ router.post('/proyectos/:id/voto', requireVoter, (req, res) => {
     });
   }
   if (project.ficha_code === voter.fichaCode) {
-    setFlash(req, 'warn', 'No puedes votar el stand de tu propia ficha.');
-    return res.redirect(`/proyectos?_v=${tok}`);
+    return res.redirect(`/proyectos?_v=${tok}&${makeFlashParam('warn', 'No puedes votar el stand de tu propia ficha.')}`);
   }
   if (!res.locals.event.apprentice_voting_open) {
-    setFlash(req, 'warn', 'La votación de aprendices ya no está abierta.');
-    return res.redirect(`/proyectos?_v=${tok}`);
+    return res.redirect(`/proyectos?_v=${tok}&${makeFlashParam('warn', 'La votación de aprendices ya no está abierta.')}`);
   }
 
   const scores = {};
@@ -202,21 +199,22 @@ router.post('/proyectos/:id/voto', requireVoter, (req, res) => {
     scores[criterion.key] = raw;
   }
 
+  let flashParam;
   try {
     db.prepare(
       `INSERT INTO apprentice_votes (voter_id, project_id, score_stand, score_clarity, score_innovation, score_mastery)
        VALUES (?, ?, ?, ?, ?, ?)`
     ).run(voter.id, project.id, scores.score_stand, scores.score_clarity, scores.score_innovation, scores.score_mastery);
-    setFlash(req, 'done', `Voto registrado para ${project.name}. ¡Gracias!`);
+    flashParam = makeFlashParam('done', `Voto registrado para ${project.name}. ¡Gracias!`);
   } catch (err) {
     if (String(err.message).includes('UNIQUE')) {
-      setFlash(req, 'warn', `Ya habías votado por ${project.name}.`);
+      flashParam = makeFlashParam('warn', `Ya habías votado por ${project.name}.`);
     } else {
       throw err;
     }
   }
 
-  res.redirect(`/proyectos?_v=${tok}`);
+  res.redirect(`/proyectos?_v=${tok}&${flashParam}`);
 });
 
 module.exports = router;
