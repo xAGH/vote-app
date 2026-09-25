@@ -19,7 +19,7 @@
   <div class="directory-grid">
     <% projects.forEach(function (p) { %>
       <% const voted = votedIds.has(p.id); %>
-      <a class="stand-card" href="/proyectos/<%= p.id %>">
+      <a class="stand-card" href="/proyectos/<%= p.id %>?_v=<%= voterToken %>">
         <div class="stand-card__top">
           <span class="stand-badge stand-badge--sm stand-badge--accent">
             <span class="stand-badge__prefix">Stand</span>

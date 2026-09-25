@@ -29,7 +29,8 @@ function timingSafeEqualStrings(a, b) {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
-// ---- Token de sesión de jurado (viaja en URL / body, no en cookie) ----
+// ---- Tokens de sesión en URL (viajan en query/body, no en cookie) ----
+// Mismo principio que el Basic Auth del admin: el token va en cada request.
 // Mismo principio que el Basic Auth del admin: el token va en cada request
 // en vez de depender de que una cookie sobreviva el proxy.
 
@@ -123,9 +124,55 @@ function csrfMiddleware(req, res, next) {
   return next();
 }
 
+const VOTER_TOKEN_TTL_MS = 8 * 60 * 60 * 1000;
+
+function signVoterToken(voterId) {
+  const expiry = Math.floor((Date.now() + VOTER_TOKEN_TTL_MS) / 1000);
+  const payload = `${voterId}.${expiry}`;
+  const sig = crypto.createHmac('sha256', _appSecret()).update(`vtok:${payload}`).digest('hex');
+  return `${payload}.${sig}`;
+}
+
+function verifyVoterToken(token) {
+  if (!token || typeof token !== 'string') return null;
+  const last = token.lastIndexOf('.');
+  const mid = token.indexOf('.');
+  if (last < 0 || mid === last) return null;
+  const payload = token.slice(0, last);
+  const sig = token.slice(last + 1);
+  const [idStr, expiryStr] = payload.split('.');
+  const voterId = Number(idStr);
+  const expiry = Number(expiryStr);
+  if (!Number.isFinite(voterId) || voterId < 1) return null;
+  if (!Number.isFinite(expiry) || Math.floor(Date.now() / 1000) > expiry) return null;
+  const expected = crypto.createHmac('sha256', _appSecret()).update(`vtok:${payload}`).digest('hex');
+  if (!timingSafeEqualStrings(sig, expected)) return null;
+  return voterId;
+}
+
 function requireVoter(req, res, next) {
-  if (!req.session.voter) return res.redirect('/aprendiz');
-  return next();
+  const rawToken = (req.query && req.query._v) || (req.body && req.body._v) || '';
+  if (rawToken) {
+    const voterId = verifyVoterToken(rawToken);
+    if (voterId) {
+      const { getDb } = require('../db');
+      const voter = getDb()
+        .prepare('SELECT id, full_name, ficha_code FROM voters WHERE id = ?')
+        .get(voterId);
+      if (voter) {
+        req.session.voter = { id: voter.id, fullName: voter.full_name, fichaCode: voter.ficha_code };
+        res.locals.voter = { id: voter.id, fullName: voter.full_name, fichaCode: voter.ficha_code };
+        res.locals.voterToken = rawToken;
+        return next();
+      }
+    }
+  }
+  if (req.session && req.session.voter) {
+    res.locals.voter = req.session.voter;
+    res.locals.voterToken = signVoterToken(req.session.voter.id);
+    return next();
+  }
+  return res.redirect('/aprendiz');
 }
 
 function requireJudge(req, res, next) {
@@ -193,6 +240,8 @@ module.exports = {
   csrfMiddleware,
   signJudgeToken,
   verifyJudgeToken,
+  signVoterToken,
+  verifyVoterToken,
   requireVoter,
   requireJudge,
   basicAuthAdmin,

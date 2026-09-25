@@ -5,7 +5,7 @@ const router = express.Router();
 
 const { getDb } = require('../db');
 const { verifyAttendance } = require('../lib/pulse');
-const { csrfMiddleware, ensureCsrfToken, requireVoter } = require('../lib/auth');
+const { csrfMiddleware, ensureCsrfToken, requireVoter, signVoterToken } = require('../lib/auth');
 const { setFlash } = require('../lib/flash');
 const { APPRENTICE_RUBRIC } = require('../lib/rubric');
 
@@ -21,7 +21,10 @@ const ATTENDANCE_MESSAGES = {
 // ---------- Ingreso ----------
 
 router.get('/aprendiz', (req, res) => {
-  if (req.session.voter) return res.redirect('/proyectos');
+  if (req.session.voter) {
+    const tok = signVoterToken(req.session.voter.id);
+    return res.redirect(`/proyectos?_v=${tok}`);
+  }
   const db = getDb();
   const fichas = db
     .prepare('SELECT ficha_code, label FROM visiting_fichas WHERE is_active = 1 ORDER BY label')
@@ -81,7 +84,8 @@ router.post('/aprendiz/ingresar', (req, res) => {
     .get(fichaCode, docNumber);
 
   req.session.voter = { id: voterRow.id, fullName: voterRow.full_name, fichaCode: voterRow.ficha_code };
-  res.redirect('/proyectos');
+  const tok = signVoterToken(voterRow.id);
+  res.redirect(`/proyectos?_v=${tok}`);
 });
 
 router.get('/aprendiz/salir', (req, res) => {
@@ -94,6 +98,7 @@ router.get('/aprendiz/salir', (req, res) => {
 router.get('/proyectos', requireVoter, (req, res) => {
   const db = getDb();
   const voter = req.session.voter;
+  const tok = res.locals.voterToken;
 
   const projects = db
     .prepare('SELECT * FROM projects WHERE is_active = 1 AND ficha_code != ? ORDER BY stand_number')
@@ -110,6 +115,7 @@ router.get('/proyectos', requireVoter, (req, res) => {
     title: 'Directorio de stands',
     projects,
     votedIds,
+    voterToken: tok,
     total,
     votedCount,
     votingOpen: !!res.locals.event.apprentice_voting_open,
@@ -121,6 +127,7 @@ router.get('/proyectos', requireVoter, (req, res) => {
 router.get('/proyectos/:id', requireVoter, (req, res) => {
   const db = getDb();
   const voter = req.session.voter;
+  const tok = res.locals.voterToken;
   const project = db
     .prepare('SELECT * FROM projects WHERE id = ? AND is_active = 1')
     .get(req.params.id);
@@ -129,13 +136,13 @@ router.get('/proyectos/:id', requireVoter, (req, res) => {
     return res.status(404).render('error', {
       title: 'Stand no encontrado',
       message: 'Ese proyecto no existe o ya no está activo.',
-      backHref: '/proyectos',
+      backHref: `/proyectos?_v=${tok}`,
     });
   }
 
   if (project.ficha_code === voter.fichaCode) {
     setFlash(req, 'warn', 'No puedes votar el stand de tu propia ficha.');
-    return res.redirect('/proyectos');
+    return res.redirect(`/proyectos?_v=${tok}`);
   }
 
   const existingVote = db
@@ -147,6 +154,7 @@ router.get('/proyectos/:id', requireVoter, (req, res) => {
     project,
     rubric: APPRENTICE_RUBRIC,
     existingVote: existingVote || null,
+    voterToken: tok,
     csrfToken: ensureCsrfToken(req),
     votingOpen: !!res.locals.event.apprentice_voting_open,
   });
@@ -155,6 +163,7 @@ router.get('/proyectos/:id', requireVoter, (req, res) => {
 router.post('/proyectos/:id/voto', requireVoter, (req, res) => {
   const db = getDb();
   const voter = req.session.voter;
+  const tok = res.locals.voterToken;
   const project = db
     .prepare('SELECT * FROM projects WHERE id = ? AND is_active = 1')
     .get(req.params.id);
@@ -163,16 +172,16 @@ router.post('/proyectos/:id/voto', requireVoter, (req, res) => {
     return res.status(404).render('error', {
       title: 'Stand no encontrado',
       message: 'Ese proyecto no existe o ya no está activo.',
-      backHref: '/proyectos',
+      backHref: `/proyectos?_v=${tok}`,
     });
   }
   if (project.ficha_code === voter.fichaCode) {
     setFlash(req, 'warn', 'No puedes votar el stand de tu propia ficha.');
-    return res.redirect('/proyectos');
+    return res.redirect(`/proyectos?_v=${tok}`);
   }
   if (!res.locals.event.apprentice_voting_open) {
     setFlash(req, 'warn', 'La votación de aprendices ya no está abierta.');
-    return res.redirect('/proyectos');
+    return res.redirect(`/proyectos?_v=${tok}`);
   }
 
   const scores = {};
@@ -184,6 +193,7 @@ router.post('/proyectos/:id/voto', requireVoter, (req, res) => {
         project,
         rubric: APPRENTICE_RUBRIC,
         existingVote: null,
+        voterToken: tok,
         csrfToken: ensureCsrfToken(req),
         votingOpen: true,
         formError: 'Califica los 4 criterios antes de enviar.',
@@ -206,7 +216,7 @@ router.post('/proyectos/:id/voto', requireVoter, (req, res) => {
     }
   }
 
-  res.redirect('/proyectos');
+  res.redirect(`/proyectos?_v=${tok}`);
 });
 
 module.exports = router;

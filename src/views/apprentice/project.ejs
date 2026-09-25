@@ -1,4 +1,4 @@
-<a class="back-link" href="/proyectos"><svg class="icon"><use href="#icon-chevron-left"/></svg> Volver al directorio</a>
+<a class="back-link" href="/proyectos?_v=<%= voterToken %>"><svg class="icon"><use href="#icon-chevron-left"/></svg> Volver al directorio</a>
 
 <div class="credential">
   <div class="stand-card__top" style="margin-bottom:18px;">
@@ -42,16 +42,17 @@
         </div>
       </fieldset>
     <% }) %>
-    <a class="btn btn--ghost btn--block" href="/proyectos">Volver al directorio</a>
+    <a class="btn btn--ghost btn--block" href="/proyectos?_v=<%= voterToken %>">Volver al directorio</a>
   <% } else if (!votingOpen) { %>
     <div class="alert alert--warn">
       <svg class="icon"><use href="#icon-alert"/></svg>
       <span>La votación está cerrada por ahora.</span>
     </div>
-    <a class="btn btn--ghost btn--block" href="/proyectos">Volver al directorio</a>
+    <a class="btn btn--ghost btn--block" href="/proyectos?_v=<%= voterToken %>">Volver al directorio</a>
   <% } else { %>
-    <form method="post" action="/proyectos/<%= project.id %>/voto">
+    <form method="post" action="/proyectos/<%= project.id %>/voto?_v=<%= voterToken %>">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="_v" value="<%= voterToken %>">
 
       <% rubric.forEach(function (criterion) { %>
         <fieldset class="star-field">
