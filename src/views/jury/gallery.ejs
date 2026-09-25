@@ -18,7 +18,7 @@
 <% } else { %>
   <div class="directory-grid">
     <% rows.forEach(function (r) { %>
-      <a class="stand-card" href="/jurado/proyectos/<%= r.project.id %>">
+      <a class="stand-card" href="/jurado/proyectos/<%= r.project.id %>?_j=<%= judgeToken %>">
         <div class="stand-card__top">
           <span class="stand-badge stand-badge--sm stand-badge--accent">
             <span class="stand-badge__prefix">Stand</span>

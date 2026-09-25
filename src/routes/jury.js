@@ -5,7 +5,7 @@ const rateLimit = require('express-rate-limit');
 const router = express.Router();
 
 const { getDb } = require('../db');
-const { verifyPin, csrfMiddleware, ensureCsrfToken, requireJudge } = require('../lib/auth');
+const { verifyPin, csrfMiddleware, ensureCsrfToken, requireJudge, signJudgeToken } = require('../lib/auth');
 const { setFlash } = require('../lib/flash');
 const { JURY_RUBRIC, JURY_CRITERIA_KEYS, JURY_CRITERIA_COUNT } = require('../lib/rubric');
 const { round1 } = require('../lib/scoring');
@@ -23,7 +23,10 @@ const enterLimiter = rateLimit({
 // ---------- Ingreso ----------
 
 router.get('/jurado', (req, res) => {
-  if (req.session.judge) return res.redirect('/jurado/proyectos');
+  if (req.session.judge) {
+    const tok = signJudgeToken(req.session.judge.id);
+    return res.redirect(`/jurado/proyectos?_j=${tok}`);
+  }
   const db = getDb();
   const judges = db.prepare('SELECT id, name FROM judges WHERE is_active = 1 ORDER BY name').all();
   res.render('jury/enter', {
@@ -49,7 +52,8 @@ router.post('/jurado/ingresar', enterLimiter, (req, res) => {
   if (!verifyPin(pin, judgeRow.pin_hash)) return render('El PIN no es correcto.');
 
   req.session.judge = { id: judgeRow.id, name: judgeRow.name };
-  res.redirect('/jurado/proyectos');
+  const tok = signJudgeToken(judgeRow.id);
+  res.redirect(`/jurado/proyectos?_j=${tok}`);
 });
 
 router.get('/jurado/salir', (req, res) => {
@@ -62,6 +66,7 @@ router.get('/jurado/salir', (req, res) => {
 router.get('/jurado/proyectos', requireJudge, (req, res) => {
   const db = getDb();
   const judgeId = req.session.judge.id;
+  const tok = res.locals.judgeToken;
   const projects = db.prepare('SELECT * FROM projects WHERE is_active = 1 ORDER BY stand_number').all();
 
   const evaluations = db
@@ -91,6 +96,7 @@ router.get('/jurado/proyectos', requireJudge, (req, res) => {
   res.render('jury/gallery', {
     title: 'Estación de evaluación',
     rows,
+    judgeToken: tok,
     submittedCount: rows.filter((r) => r.status === 'submitted').length,
     total: rows.length,
     votingOpen: !!res.locals.event.jury_voting_open,
@@ -115,13 +121,14 @@ function loadEvaluation(db, judgeId, projectId) {
 router.get('/jurado/proyectos/:id', requireJudge, (req, res) => {
   const db = getDb();
   const judgeId = req.session.judge.id;
+  const tok = res.locals.judgeToken;
   const project = db.prepare('SELECT * FROM projects WHERE id = ? AND is_active = 1').get(req.params.id);
 
   if (!project) {
     return res.status(404).render('error', {
       title: 'Proyecto no encontrado',
       message: 'Ese proyecto no existe o ya no está activo.',
-      backHref: '/jurado/proyectos',
+      backHref: `/jurado/proyectos?_j=${tok}`,
     });
   }
 
@@ -137,6 +144,7 @@ router.get('/jurado/proyectos/:id', requireJudge, (req, res) => {
     evaluation,
     rubric: JURY_RUBRIC,
     scores,
+    judgeToken: tok,
     csrfToken: ensureCsrfToken(req),
     formError: null,
     votingOpen: !!res.locals.event.jury_voting_open,
@@ -175,28 +183,27 @@ router.post('/jurado/proyectos/:id/criterio', requireJudge, (req, res) => {
 router.post('/jurado/proyectos/:id/enviar', requireJudge, (req, res) => {
   const db = getDb();
   const judgeId = req.session.judge.id;
+  const tok = res.locals.judgeToken;
   const project = db.prepare('SELECT * FROM projects WHERE id = ? AND is_active = 1').get(req.params.id);
 
   if (!project) {
     return res.status(404).render('error', {
       title: 'Proyecto no encontrado',
       message: 'Ese proyecto no existe o ya no está activo.',
-      backHref: '/jurado/proyectos',
+      backHref: `/jurado/proyectos?_j=${tok}`,
     });
   }
   if (!res.locals.event.jury_voting_open) {
     setFlash(req, 'warn', 'La calificación de jurados ya no está abierta.');
-    return res.redirect('/jurado/proyectos');
+    return res.redirect(`/jurado/proyectos?_j=${tok}`);
   }
 
   const evaluation = loadEvaluation(db, judgeId, project.id);
   if (evaluation.submitted_at) {
     setFlash(req, 'warn', `Ya habías enviado tu evaluación de ${project.name}.`);
-    return res.redirect('/jurado/proyectos');
+    return res.redirect(`/jurado/proyectos?_j=${tok}`);
   }
 
-  // Guarda todo lo que venga en el formulario (defensa en profundidad además
-  // del autoguardado por AJAX) y valida que los 19 criterios estén completos.
   const upsert = db.prepare(
     `INSERT INTO jury_scores (evaluation_id, criterion_key, score) VALUES (?, ?, ?)
      ON CONFLICT(evaluation_id, criterion_key) DO UPDATE SET score = excluded.score`
@@ -231,6 +238,7 @@ router.post('/jurado/proyectos/:id/enviar', requireJudge, (req, res) => {
       evaluation,
       rubric: JURY_RUBRIC,
       scores,
+      judgeToken: tok,
       csrfToken: ensureCsrfToken(req),
       votingOpen: true,
       formError: `Faltan ${missing.length} criterios por calificar antes de enviar.`,
@@ -239,26 +247,25 @@ router.post('/jurado/proyectos/:id/enviar', requireJudge, (req, res) => {
 
   db.prepare('UPDATE jury_evaluations SET submitted_at = datetime(\'now\') WHERE id = ?').run(evaluation.id);
   setFlash(req, 'done', `Evaluación enviada para ${project.name}.`);
-  res.redirect('/jurado/proyectos');
+  res.redirect(`/jurado/proyectos?_j=${tok}`);
 });
 
-// Reabre una evaluación ya enviada para permitir corregirla mientras la
-// calificación siga abierta.
 router.post('/jurado/proyectos/:id/editar', requireJudge, (req, res) => {
   const db = getDb();
   const judgeId = req.session.judge.id;
+  const tok = res.locals.judgeToken;
   const project = db.prepare('SELECT * FROM projects WHERE id = ? AND is_active = 1').get(req.params.id);
 
   if (!project) {
     return res.status(404).render('error', {
       title: 'Proyecto no encontrado',
       message: 'Ese proyecto no existe o ya no está activo.',
-      backHref: '/jurado/proyectos',
+      backHref: `/jurado/proyectos?_j=${tok}`,
     });
   }
   if (!res.locals.event.jury_voting_open) {
     setFlash(req, 'warn', 'La calificación de jurados ya no está abierta, no puedes editarla.');
-    return res.redirect('/jurado/proyectos');
+    return res.redirect(`/jurado/proyectos?_j=${tok}`);
   }
 
   const evaluation = db
@@ -268,7 +275,7 @@ router.post('/jurado/proyectos/:id/editar', requireJudge, (req, res) => {
     db.prepare('UPDATE jury_evaluations SET submitted_at = NULL WHERE id = ?').run(evaluation.id);
     setFlash(req, 'done', `Evaluación de ${project.name} habilitada para edición.`);
   }
-  res.redirect(`/jurado/proyectos/${project.id}`);
+  res.redirect(`/jurado/proyectos/${project.id}?_j=${tok}`);
 });
 
 module.exports = router;

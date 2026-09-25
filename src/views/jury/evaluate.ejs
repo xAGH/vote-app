@@ -4,7 +4,7 @@
   const answeredCount = Object.keys(scores).length;
   const currentAvg = answeredCount ? (Object.values(scores).reduce((a, b) => a + b, 0) / answeredCount) : null;
 %>
-<a class="back-link" href="/jurado/proyectos"><svg class="icon"><use href="#icon-chevron-left"/></svg> Volver a mis proyectos</a>
+<a class="back-link" href="/jurado/proyectos?_j=<%= judgeToken %>"><svg class="icon"><use href="#icon-chevron-left"/></svg> Volver a mis proyectos</a>
 
 <div class="page-head" style="margin-bottom:14px;">
   <div class="stand-card__top" style="margin-bottom:10px;">
@@ -34,9 +34,10 @@
   </div>
 <% } else { %>
 
-  <form method="post" action="/jurado/proyectos/<%= project.id %>/enviar"
-        <% if (isEditable) { %>data-jury-form data-csrf="<%= csrfToken %>" data-save-url="/jurado/proyectos/<%= project.id %>/criterio"<% } %>>
+  <form method="post" action="/jurado/proyectos/<%= project.id %>/enviar?_j=<%= judgeToken %>"
+        <% if (isEditable) { %>data-jury-form data-csrf="<%= csrfToken %>" data-judge-token="<%= judgeToken %>" data-save-url="/jurado/proyectos/<%= project.id %>/criterio"<% } %>>
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <input type="hidden" name="_j" value="<%= judgeToken %>">
 
     <div class="score-badge">
       <div>
@@ -97,20 +98,21 @@
       </button>
       <p class="field__hint" style="text-align:center; margin-top:10px;">Podrás editarla después de enviarla mientras la calificación siga abierta.</p>
     <% } else if (!isSubmitted) { %>
-      <a class="btn btn--ghost btn--block" href="/jurado/proyectos">Volver a mis proyectos</a>
+      <a class="btn btn--ghost btn--block" href="/jurado/proyectos?_j=<%= judgeToken %>">Volver a mis proyectos</a>
     <% } %>
   </form>
 
   <% if (isSubmitted && votingOpen) { %>
-    <form method="post" action="/jurado/proyectos/<%= project.id %>/editar" style="margin-top:10px;">
+    <form method="post" action="/jurado/proyectos/<%= project.id %>/editar?_j=<%= judgeToken %>" style="margin-top:10px;">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="_j" value="<%= judgeToken %>">
       <button class="btn btn--ink btn--block" type="submit">
         Editar evaluación
         <svg class="icon"><use href="#icon-pencil"/></svg>
       </button>
     </form>
-    <a class="btn btn--ghost btn--block" style="margin-top:10px;" href="/jurado/proyectos">Volver a mis proyectos</a>
+    <a class="btn btn--ghost btn--block" style="margin-top:10px;" href="/jurado/proyectos?_j=<%= judgeToken %>">Volver a mis proyectos</a>
   <% } else if (isSubmitted) { %>
-    <a class="btn btn--ghost btn--block" style="margin-top:10px;" href="/jurado/proyectos">Volver a mis proyectos</a>
+    <a class="btn btn--ghost btn--block" style="margin-top:10px;" href="/jurado/proyectos?_j=<%= judgeToken %>">Volver a mis proyectos</a>
   <% } %>
 <% } %>

@@ -31,6 +31,7 @@ function initJuryForm() {
   if (!root) return;
 
   const csrfToken = root.dataset.csrf;
+  const judgeToken = root.dataset.judgeToken || '';
   const saveUrl = root.dataset.saveUrl;
   const scoreValueEl = root.querySelector('[data-score-value]');
   const saveStatusEl = root.querySelector('[data-save-status]');
@@ -83,7 +84,7 @@ function initJuryForm() {
       const res = await fetch(saveUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ _csrf: csrfToken, criterion: name, score: value }),
+        body: JSON.stringify({ _csrf: csrfToken, _j: judgeToken, criterion: name, score: value }),
       });
       if (!res.ok) throw new Error('save failed');
       flashSaved();

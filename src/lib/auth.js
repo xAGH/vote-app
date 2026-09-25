@@ -29,6 +29,37 @@ function timingSafeEqualStrings(a, b) {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
+// ---- Token de sesión de jurado (viaja en URL / body, no en cookie) ----
+// Mismo principio que el Basic Auth del admin: el token va en cada request
+// en vez de depender de que una cookie sobreviva el proxy.
+
+const JUDGE_TOKEN_TTL_MS = 8 * 60 * 60 * 1000; // 8 horas
+
+function signJudgeToken(judgeId) {
+  const expiry = Math.floor((Date.now() + JUDGE_TOKEN_TTL_MS) / 1000);
+  const payload = `${judgeId}.${expiry}`;
+  const sig = crypto.createHmac('sha256', _appSecret()).update(`jtok:${payload}`).digest('hex');
+  return `${payload}.${sig}`;
+}
+
+function verifyJudgeToken(token) {
+  if (!token || typeof token !== 'string') return null;
+  // formato: judgeId.expiry.hmac (64 hex chars sin punto)
+  const last = token.lastIndexOf('.');
+  const mid = token.indexOf('.');
+  if (last < 0 || mid === last) return null;
+  const payload = token.slice(0, last);
+  const sig = token.slice(last + 1);
+  const [idStr, expiryStr] = payload.split('.');
+  const judgeId = Number(idStr);
+  const expiry = Number(expiryStr);
+  if (!Number.isFinite(judgeId) || judgeId < 1) return null;
+  if (!Number.isFinite(expiry) || Math.floor(Date.now() / 1000) > expiry) return null;
+  const expected = crypto.createHmac('sha256', _appSecret()).update(`jtok:${payload}`).digest('hex');
+  if (!timingSafeEqualStrings(sig, expected)) return null;
+  return judgeId;
+}
+
 // ---- CSRF stateless (HMAC por ventana de tiempo) ----
 // El token se deriva del secreto + bucket de tiempo. No necesita sesión ni
 // cookies: aunque Cloudflare/Traefik cachee la página o corte el Set-Cookie,
@@ -98,8 +129,30 @@ function requireVoter(req, res, next) {
 }
 
 function requireJudge(req, res, next) {
-  if (!req.session.judge) return res.redirect('/jurado');
-  return next();
+  // Token en URL/body (sin cookies — igual que admin usa Authorization header)
+  const rawToken = (req.query && req.query._j) || (req.body && req.body._j) || '';
+  if (rawToken) {
+    const judgeId = verifyJudgeToken(rawToken);
+    if (judgeId) {
+      const { getDb } = require('../db');
+      const judge = getDb()
+        .prepare('SELECT id, name FROM judges WHERE id = ? AND is_active = 1')
+        .get(judgeId);
+      if (judge) {
+        req.session.judge = { id: judge.id, name: judge.name };
+        res.locals.judge = { id: judge.id, name: judge.name };
+        res.locals.judgeToken = rawToken;
+        return next();
+      }
+    }
+  }
+  // Respaldo: sesión (para entornos donde las cookies sí funcionan)
+  if (req.session && req.session.judge) {
+    res.locals.judge = req.session.judge;
+    res.locals.judgeToken = signJudgeToken(req.session.judge.id);
+    return next();
+  }
+  return res.redirect('/jurado');
 }
 
 /**
@@ -138,6 +191,8 @@ module.exports = {
   ensureCsrfToken,
   verifyCsrf,
   csrfMiddleware,
+  signJudgeToken,
+  verifyJudgeToken,
   requireVoter,
   requireJudge,
   basicAuthAdmin,
