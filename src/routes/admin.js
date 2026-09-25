@@ -247,33 +247,47 @@ function readProjectForm(body) {
 
 // ---------- Jurados ----------
 
+function listJudges(db) {
+  return db.prepare('SELECT id, name, is_active, created_at FROM judges ORDER BY is_active DESC, name').all();
+}
+
 router.get('/jurados', (req, res) => {
   const db = getDb();
-  const judges = db.prepare('SELECT id, name, is_active, created_at FROM judges ORDER BY is_active DESC, name').all();
-  res.render('admin/judges', { title: 'Jurados', judges });
+  res.render('admin/judges', { title: 'Jurados', judges: listJudges(db), newPin: null });
 });
 
+// Renderiza la respuesta directamente en vez de hacer redirect: /admin usa
+// Basic Auth y no sesión (ver lib/auth.js#basicAuthAdmin), así que un flash
+// guardado en req.session.flash puede perderse si la cookie de sesión no
+// vuelve al servidor en el siguiente GET. El PIN solo se muestra una vez,
+// así que no podemos arriesgarnos a perderlo en ese round-trip.
 router.post('/jurados', (req, res) => {
   const db = getDb();
   const name = String(req.body.name || '').trim();
   if (!name) {
-    setFlash(req, 'warn', 'Escribe el nombre del jurado.');
-    return res.redirect('/admin/jurados');
+    return res.render('admin/judges', {
+      title: 'Jurados',
+      judges: listJudges(db),
+      newPin: null,
+      formError: 'Escribe el nombre del jurado.',
+    });
   }
   const pin = String(Math.floor(1000 + Math.random() * 9000));
   db.prepare('INSERT INTO judges (name, pin_hash) VALUES (?, ?)').run(name, hashPin(pin));
-  setFlash(req, 'done', `Jurado "${name}" creado. PIN: ${pin} (apúntalo, no se vuelve a mostrar).`);
-  res.redirect('/admin/jurados');
+  res.render('admin/judges', { title: 'Jurados', judges: listJudges(db), newPin: { name, pin } });
 });
 
 router.post('/jurados/:id/regenerar-pin', (req, res) => {
   const db = getDb();
   const judge = db.prepare('SELECT * FROM judges WHERE id = ?').get(req.params.id);
-  if (!judge) return res.redirect('/admin/jurados');
+  if (!judge) return res.render('admin/judges', { title: 'Jurados', judges: listJudges(db), newPin: null });
   const pin = String(Math.floor(1000 + Math.random() * 9000));
   db.prepare('UPDATE judges SET pin_hash = ? WHERE id = ?').run(hashPin(pin), judge.id);
-  setFlash(req, 'done', `Nuevo PIN de ${judge.name}: ${pin} (apúntalo, no se vuelve a mostrar).`);
-  res.redirect('/admin/jurados');
+  res.render('admin/judges', {
+    title: 'Jurados',
+    judges: listJudges(db),
+    newPin: { name: judge.name, pin },
+  });
 });
 
 router.post('/jurados/:id/estado', (req, res) => {

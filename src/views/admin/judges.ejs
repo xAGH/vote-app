@@ -5,6 +5,20 @@
   <p class="page-head__desc">El PIN se muestra una sola vez al crear o regenerar. Entrégalo en persona.</p>
 </div>
 
+<% if (typeof newPin !== 'undefined' && newPin) { %>
+  <div class="alert alert--done" role="status">
+    <svg class="icon"><use href="#icon-check"/></svg>
+    <span>PIN de <strong><%= newPin.name %></strong>: <strong><%= newPin.pin %></strong> (apúntalo, no se vuelve a mostrar).</span>
+  </div>
+<% } %>
+
+<% if (typeof formError !== 'undefined' && formError) { %>
+  <div class="alert alert--warn" role="alert">
+    <svg class="icon"><use href="#icon-alert"/></svg>
+    <span><%= formError %></span>
+  </div>
+<% } %>
+
 <div class="table-wrap" style="padding:22px; margin-bottom:24px;">
   <h2 style="font-size:0.95rem; font-weight:700; margin-bottom:14px;">Agregar jurado</h2>
   <form method="post" action="/admin/jurados" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
