@@ -1,7 +1,6 @@
 'use strict';
 
 const express = require('express');
-const rateLimit = require('express-rate-limit');
 const router = express.Router();
 
 const { getDb } = require('../db');
@@ -11,14 +10,6 @@ const { setFlash } = require('../lib/flash');
 const { APPRENTICE_RUBRIC } = require('../lib/rubric');
 
 router.use(csrfMiddleware);
-
-const enterLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  limit: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
-});
 
 const ATTENDANCE_MESSAGES = {
   NOT_SYNCED: 'Todavía no hemos sincronizado la asistencia de tu ficha. Avísale al organizador del evento.',
@@ -44,7 +35,7 @@ router.get('/aprendiz', (req, res) => {
   });
 });
 
-router.post('/aprendiz/ingresar', enterLimiter, (req, res) => {
+router.post('/aprendiz/ingresar', (req, res) => {
   const db = getDb();
   const fichas = db
     .prepare('SELECT ficha_code, label FROM visiting_fichas WHERE is_active = 1 ORDER BY label')
