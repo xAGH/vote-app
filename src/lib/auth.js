@@ -3,6 +3,9 @@
 const crypto = require('crypto');
 
 const SCRYPT_KEYLEN = 64;
+const CSRF_WINDOW_MS = 15 * 60 * 1000;
+
+// ---- PIN ----
 
 function hashPin(pin) {
   const salt = crypto.randomBytes(16).toString('hex');
@@ -26,25 +29,52 @@ function timingSafeEqualStrings(a, b) {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
-/** Genera un CSRF token por sesión y lo guarda si no existe todavía. */
-function ensureCsrfToken(req) {
-  if (!req.session.csrfToken) {
-    req.session.csrfToken = crypto.randomBytes(24).toString('hex');
+// ---- CSRF stateless (HMAC por ventana de tiempo) ----
+// El token se deriva del secreto + bucket de tiempo. No necesita sesión ni
+// cookies: aunque Cloudflare/Traefik cachee la página o corte el Set-Cookie,
+// el servidor puede verificar el token sin estado almacenado.
+
+function _appSecret() {
+  return process.env.SESSION_SECRET || 'dev-only-secret-not-for-production';
+}
+
+function makeCsrfToken() {
+  const bucket = Math.floor(Date.now() / CSRF_WINDOW_MS);
+  return crypto.createHmac('sha256', _appSecret()).update(`csrf:${bucket}`).digest('hex');
+}
+
+function _verifyCsrfHmac(token) {
+  if (typeof token !== 'string' || !token) return false;
+  const bucket = Math.floor(Date.now() / CSRF_WINDOW_MS);
+  // Acepta bucket actual y el anterior (margen de 15 min en cambio de ventana)
+  for (const b of [bucket, bucket - 1]) {
+    const expected = crypto.createHmac('sha256', _appSecret()).update(`csrf:${b}`).digest('hex');
+    if (timingSafeEqualStrings(token, expected)) return true;
   }
-  return req.session.csrfToken;
+  return false;
+}
+
+/** Devuelve un token CSRF. No depende de que la sesión funcione. */
+function ensureCsrfToken(req) {
+  const token = makeCsrfToken();
+  // Guardar en sesión solo como respaldo; no se depende de ello para verificar.
+  if (req.session) req.session.csrfToken = token;
+  return token;
 }
 
 function verifyCsrf(req) {
   const token = req.body && req.body._csrf;
-  return typeof token === 'string' && req.session.csrfToken && timingSafeEqualStrings(token, req.session.csrfToken);
+  if (typeof token !== 'string') return false;
+  // Verificación stateless (no necesita sesión ni cookies)
+  if (_verifyCsrfHmac(token)) return true;
+  // Respaldo: verificación basada en sesión (por si hay sesiones viejas activas)
+  return !!(req.session && req.session.csrfToken && timingSafeEqualStrings(token, req.session.csrfToken));
 }
 
 function csrfMiddleware(req, res, next) {
   if (req.method === 'GET' || req.method === 'HEAD') {
-    // Estas páginas llevan un csrfToken atado a la sesión: si un proxy/CDN
-    // delante (Traefik, Cloudflare) las cachea, todos los visitantes reciben
-    // el mismo token sin la cookie de sesión que lo respalda y el login falla
-    // siempre con "Solicitud inválida".
+    // Previene que proxies/CDN cacheen la página y sirvan el mismo token a
+    // todos los usuarios (lo que causaría "Solicitud inválida" al enviar).
     res.set('Cache-Control', 'no-store');
     ensureCsrfToken(req);
     return next();
