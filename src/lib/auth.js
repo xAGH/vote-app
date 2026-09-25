@@ -41,6 +41,11 @@ function verifyCsrf(req) {
 
 function csrfMiddleware(req, res, next) {
   if (req.method === 'GET' || req.method === 'HEAD') {
+    // Estas páginas llevan un csrfToken atado a la sesión: si un proxy/CDN
+    // delante (Traefik, Cloudflare) las cachea, todos los visitantes reciben
+    // el mismo token sin la cookie de sesión que lo respalda y el login falla
+    // siempre con "Solicitud inválida".
+    res.set('Cache-Control', 'no-store');
     ensureCsrfToken(req);
     return next();
   }
